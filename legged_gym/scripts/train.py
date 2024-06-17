@@ -1,5 +1,7 @@
 import sys
-# sys.path.append("/home/ysc/dr_gym/")
+import os
+cur_path = os.getcwd()
+sys.path.append(os.path.join(cur_path, "../"))
 
 from legged_gym.envs import *
 from legged_gym.utils import task_registry

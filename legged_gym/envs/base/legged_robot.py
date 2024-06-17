@@ -1331,7 +1331,7 @@ class LeggedRobot(BaseTask):
         self.gym.clear_lines(self.viewer)
         
         hip_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.05, color=(1, 1, 0))
-        base_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.1, color=(1, 0, 0))
+        base_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.1, color=(0, 0, 1))
         foothold_center_sphere_geom= gymutil.WireframeSphereGeometry(radius=0.05, color=(0, 1, 0))
         foothold_range_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.03, color=(1, 0, 0))
         sphere_geom = gymutil.WireframeSphereGeometry(0.03, 4, 4, None, color=(0, 1, 0))
