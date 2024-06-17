@@ -593,7 +593,6 @@ class LeggedRobot(BaseTask):
                 max_offset = self.cfg.domain_rand.max_push_force_offset
                 self.forces[:,0,0:2] = torch_rand_float(-max_force, max_force, (self.num_envs,2), device=self.device)
                 self.force_positions[:,0,0:3] = torch_rand_float(-max_offset, max_offset, (self.num_envs, 3), device=self.device)
-            # print('!!!!!!!!!!!!!!!!!!!!!')
             # print(self.common_step_counter, self.forces[1,:])
             self._push_robots()
         else :
@@ -1332,7 +1331,7 @@ class LeggedRobot(BaseTask):
         
         hip_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.05, color=(1, 1, 0))
         base_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.1, color=(0, 0, 1))
-        foothold_center_sphere_geom= gymutil.WireframeSphereGeometry(radius=0.05, color=(0, 1, 0))
+        foothold_center_sphere_geom= gymutil.WireframeSphereGeometry(radius=0.05, color=(0, 0, 1))
         foothold_range_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.03, color=(1, 0, 0))
         sphere_geom = gymutil.WireframeSphereGeometry(0.03, 4, 4, None, color=(0, 1, 0))
         # draw height lines
@@ -1364,7 +1363,7 @@ class LeggedRobot(BaseTask):
                     if (pos[0] - x)**2 + (pos[1] - y)**2 < 0.08:
                         flag_in_range = True
                         break
-                    
+                
                 if flag_in_range:
                     if foothold_score[j] > 0.1:
                         gymutil.draw_lines(foothold_range_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
@@ -1375,14 +1374,14 @@ class LeggedRobot(BaseTask):
                 #     gymutil.draw_lines(sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose) 
 
         #! shaoze
-        # sphere_geom_arrow = gymutil.WireframeSphereGeometry(0.02, 16, 16, None, color=(1, 0.35, 0.25))
-        # pose_robot = self.root_states[self.lookat_id, :3].cpu().numpy()
-        # for i in range(5):
-        #     norm = torch.norm(self.stair_vector, dim=-1, keepdim=True)
-        #     target_vec_norm = self.stair_vector / (norm + 1e-5)
-        #     pose_arrow = pose_robot[:3] + 0.1*(i+3) * target_vec_norm[self.lookat_id, :3].cpu().numpy()
-        #     pose = gymapi.Transform(gymapi.Vec3(pose_arrow[0], pose_arrow[1], pose_arrow[2]), r=None)
-        #     gymutil.draw_lines(sphere_geom_arrow, self.gym, self.viewer, self.envs[self.lookat_id], pose)
+        sphere_geom_arrow = gymutil.WireframeSphereGeometry(0.02, 16, 16, None, color=(1, 0.35, 0.25))
+        pose_robot = self.root_states[self.lookat_id, :3].cpu().numpy()
+        for i in range(5):
+            norm = torch.norm(self.stair_vector, dim=-1, keepdim=True)
+            target_vec_norm = self.stair_vector / (norm + 1e-5)
+            pose_arrow = pose_robot[:3] + 0.1*(i+3) * target_vec_norm[self.lookat_id, :3].cpu().numpy()
+            pose = gymapi.Transform(gymapi.Vec3(pose_arrow[0], pose_arrow[1], pose_arrow[2]), r=None)
+            gymutil.draw_lines(sphere_geom_arrow, self.gym, self.viewer, self.envs[self.lookat_id], pose)
 
         
         # for i in range(self.num_envs):
