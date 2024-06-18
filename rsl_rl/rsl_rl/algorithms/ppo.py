@@ -190,7 +190,7 @@ class PPO:
             old_mu_batch, old_sigma_batch,base_vel_batch,next_obs_batch, hid_states_batch, masks_batch,rew_buf_batch in generator:
                 ####################################for teacher training ##################################################
             #! height
-            # latent_mu, latent_var, z, height_latent = self.actor_critic.vae.cenet_forward(obs_history_batch, privileged_obs_batch[..., 0:187])
+            # latent_mu, latent_var, z, height_latent = self.actor_critic.vae.cenet_forward(obs_history_batch, privileged_obs_batch[..., 0:693])
             # recons = self.actor_critic.vae.cenet_decoder(torch.cat([z, latent_mu[:,:3], height_latent], dim = 1))
 
             #! changed by wz 2
@@ -217,7 +217,7 @@ class PPO:
             #! terrian loss
 
             #! height
-            # height_loss = F.mse_loss(height_recon, privileged_obs_batch[..., 187+3:])
+            # height_loss = F.mse_loss(height_recon, privileged_obs_batch[..., 693+3:])
 
 
             # print('now: ', recons[0])

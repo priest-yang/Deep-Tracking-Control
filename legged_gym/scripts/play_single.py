@@ -1,7 +1,9 @@
 import sys
-sys.path.append("/home/ysc/dr_gym/")
-from legged_gym import LEGGED_GYM_ROOT_DIR
 import os
+cur_path = os.getcwd()
+sys.path.append(os.path.join(cur_path, "../"))
+
+from legged_gym import LEGGED_GYM_ROOT_DIR
 
 from legged_gym.envs import *
 from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Logger
@@ -28,6 +30,7 @@ def play(args):
     env_cfg.max_episode_length = 10000
     # prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
+    env.debug_viz = True
     env = HistoryWrapper(env)
     obs = env.get_observations()
     # load policy
@@ -62,7 +65,7 @@ def play(args):
     
 
 if __name__ == '__main__':
-    EXPORT_POLICY = True
+    EXPORT_POLICY = False
     RECORD_FRAMES = False
     MOVE_CAMERA = False
     args = get_args()

@@ -6,7 +6,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         # num_envs = 4096
         num_envs = 8
         num_observations = 45 # 45 + PMTG:13=58
-        num_privileged_obs =  187 +3 +187 #212+384
+        num_privileged_obs =  693 +3 +693 #212+384
         num_obs_history = 45*5
         num_observation_history = 5 # the length of history ,for lstm  =1
         debug_viz = False

@@ -1,7 +1,9 @@
 import sys
-sys.path.append("/home/ysc/dr_gym/")
-from legged_gym import LEGGED_GYM_ROOT_DIR
 import os
+cur_path = os.getcwd()
+sys.path.append(os.path.join(cur_path, "../"))
+
+from legged_gym import LEGGED_GYM_ROOT_DIR
 
 
 

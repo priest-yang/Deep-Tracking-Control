@@ -28,12 +28,12 @@ class AC_Args(PrefixProto, cli=False):
     privileged_encoder_branch_latent_dims = [12]
     privileged_encoder_branch_hidden_dims = [[64, 32]]
 
-    terrain_encoder_branch_input_dims = [187]# original: 187
+    terrain_encoder_branch_input_dims = [693]# original: 693
     terrain_encoder_branch_latent_dims = [64]# original: 16
     terrain_encoder_branch_hidden_dims = [[128, 64]]
 
-    terrain_decoder_branch_input_dims = [64]# original: 187
-    terrain_decoder_branch_output_dims = [187]# original: 16
+    terrain_decoder_branch_input_dims = [64]# original: 693
+    terrain_decoder_branch_output_dims = [693]# original: 16
     terrain_decoder_branch_hidden_dims = [[64, 128]]
     #CENet
     cenet_encoder_branch_input_dims = [45*5]# 45*5
@@ -54,7 +54,7 @@ class AC_Args(PrefixProto, cli=False):
     Lidar_encoder_branch_hidden_dims = [[512, 256, 128]]
     
     Lidar_decoder_branch_input_dims = [64]
-    Lidar_decoder_branch_latent_dims = [187]
+    Lidar_decoder_branch_latent_dims = [693]
     Lidar_decoder_branch_hidden_dims = [[256]]
     #LSTM todo
     rnn_type = 'gru'#lstm
@@ -394,7 +394,7 @@ class ActorCritic_Decoder(nn.Module):
         # for i, (branch_input_dim, branch_hidden_dims, branch_latent_dim) in enumerate(
         #         zip(AC_Args.adaptation_encoder_branch_input_dims,
             #         AC_Args.adaptation_encoder_branch_hidden_dims,
-            #         [187])):
+            #         [693])):
             # # Env factor encoder
             # env_factor_encoder_layers = []
             # env_factor_encoder_layers.append(nn.Linear(branch_input_dim, branch_hidden_dims[0]))
@@ -481,7 +481,7 @@ class ActorCritic_Decoder(nn.Module):
 
         # Value function
         critic_layers = []
-        critic_layers.append(nn.Linear(187 + num_obs +3+ 15 +12 - 24 , AC_Args.critic_hidden_dims[0]))#todo :try latent dim = 36
+        critic_layers.append(nn.Linear(693 + num_obs +3+ 15 +12 - 24 , AC_Args.critic_hidden_dims[0]))#todo :try latent dim = 36
         critic_layers.append(activation)
         for l in range(len(AC_Args.critic_hidden_dims)):
             if l == len(AC_Args.critic_hidden_dims) - 1:
@@ -655,7 +655,7 @@ class ActorCritic_Decoder(nn.Module):
  
         # self.latent_distribution = Normal(self.latent_mu_, torch.exp(0.5 * self.latent_var_))
         #! height
-        # self.latent_mu, self.latent_var, self.z, self.height_latent = self.vae.cenet_forward(observations_history, privileged_obs[..., 0:187])
+        # self.latent_mu, self.latent_var, self.z, self.height_latent = self.vae.cenet_forward(observations_history, privileged_obs[..., 0:693])
         # mean = self.actor_body(torch.cat((observations,self.z,self.latent_mu[:,:3], self.height_latent), dim=-1))
 
         #! changed by wz 2
@@ -694,7 +694,7 @@ class ActorCritic_Decoder(nn.Module):
         # observations = observations[:,:45]
         # h_t = self.memory_a(observations, masks, hidden_states)
 
-        # height_map = privileged_obs[:,:187] #+ (2 * torch.rand_like(privileged_obs[:,:216]) - 1) * 0.2
+        # height_map = privileged_obs[:,:693] #+ (2 * torch.rand_like(privileged_obs[:,:216]) - 1) * 0.2
         # l_t = self.terrain_encoder(height_map)
 
         # b_t1 = self.memory_a(torch.cat((observations[:,:6].clone(),observations[:,9:45].clone(),l_t),dim=-1))
@@ -716,7 +716,7 @@ class ActorCritic_Decoder(nn.Module):
         
         if self.count == 0:#need to delete while running 
             self.exporter = PolicyExporter(self.memory_a,self.terrain_encoder,self.actor_student,self.ga_encoder,self.gb_encoder)
-            self.exporter.export(torch.cat((observations[:,:45],privileged_obs[:,:187]),dim=-1))
+            self.exporter.export(torch.cat((observations[:,:45],privileged_obs[:,:693]),dim=-1))
             loaded_dict = torch.load('/home/wt/deeprobotics/dr_gym_vae/output/policy_vae_build_v1.0.pt')
 
             self.exporter.load_state_dict(loaded_dict.state_dict())
@@ -727,7 +727,7 @@ class ActorCritic_Decoder(nn.Module):
             # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             # for n,p in exporter.adaptation_encoder.named_parameters():
             #     print(n,':',p)
-        action_test = self.exporter(torch.cat((observations[:,:45],privileged_obs[:,:187]),dim=-1).cpu())
+        action_test = self.exporter(torch.cat((observations[:,:45],privileged_obs[:,:693]),dim=-1).cpu())
         # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         # print('actions_mean:',actions_mean)
         # print('action_test:',action_test)
@@ -743,7 +743,7 @@ class ActorCritic_Decoder(nn.Module):
         latent_e = self.vae.cenet_encoder(observations_history)#64
         # vel = self.vel_mu(latent_e)
         latent = self.vae.latent_mu(latent_e)
-        height_latent = self.vae.terrain_encoder(privileged_obs[:, 0:187])
+        height_latent = self.vae.terrain_encoder(privileged_obs[:, 0:693])
 
         #! height
         # actions_mean = self.actor_body(torch.cat((observations,latent[:,3:],latent[:,:3], height_latent), dim=-1))
@@ -764,8 +764,8 @@ class ActorCritic_Decoder(nn.Module):
         # obs_total = torch.cat((observations,observations_history), dim=-1)
         # if self.count == 0:#need to delete while running 
         #     self.exporter1 = TerrainEncoder(self.vae.terrain_encoder)
-        #     self.exporter1.export(privileged_obs[..., 0:187])
-        #     latent_lidar = self.exporter1(privileged_obs[..., 0:187].cpu())
+        #     self.exporter1.export(privileged_obs[..., 0:693])
+        #     latent_lidar = self.exporter1(privileged_obs[..., 0:693].cpu())
         #     loaded_dict1 = torch.load('/media/ysc/C7FD28394D2A63C9/ysc/LearningCode/lite3_ts_isaac-main/policy/terrain_stair_H_v2.3.pt')
         #     self.exporter1.load_state_dict(loaded_dict1.state_dict())
 
@@ -799,7 +799,7 @@ class ActorCritic_Decoder(nn.Module):
         # latent_e = self.cenet_encoder(observations_history)
         # vel = self.vel_var(latent_e)
         vel = base_vel
-        value = self.critic_body(torch.cat((critic_observations,vel,privileged_observations[:, 187:187+3],privileged_observations[:, 187+3:]), dim=-1))
+        value = self.critic_body(torch.cat((critic_observations,vel,privileged_observations[:, 693:693+3],privileged_observations[:, 693+3:]), dim=-1))
         return value
     
     def act_privilege(self, privileged_observations):#no use
@@ -925,8 +925,9 @@ class PolicyExporter_export(torch.nn.Module):
 
        
     def export(self, observations_total):
+        from legged_gym import LEGGED_GYM_ROOT_DIR 
         self.eval()
         for param in self.parameters():
             param.requires_grad = False
         traced_script_module = torch.jit.script(self,observations_total.cpu())
-        traced_script_module.save('/home/wt/deeprobotics/dr_gym_vae/output/policy_vae_build_v1.0.pt')
+        traced_script_module.save(f'{LEGGED_GYM_ROOT_DIR}/output/dtc_policy.pt')
