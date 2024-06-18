@@ -241,9 +241,19 @@ class LeggedRobot(BaseTask):
             self.foothold_score = foothold_score.view(self.num_envs, -1)
             
             # take distance to nomimal foothold
+            # breakpoint()
+            height_points_flattened = self.height_points.flatten(end_dim = -2)
+            quat_flattened = self.base_quat.repeat(1, self.measured_heights.shape[1]).flatten()
+            heights_world = quat_apply_yaw(quat_flattened, height_points_flattened) 
+            self.heights_world = heights_world.reshape(self.num_envs, -1, 3) + self.base_pos.unsqueeze(1).repeat(1, len(self.cfg.terrain.measured_points_x)*len(self.cfg.terrain.measured_points_y), 1)
+            self.heights_world[:, : 2] = self.measured_heights[:, : 2]
+            
             for i in range(4):
                 pos_0 = self.pred_footholds[:, i, :]
                 pos_1 = self.pred_footholds[:, i, :]
+                
+                # heights_world = quat_apply()
+                
                             
             
             # breakpoint()
@@ -1358,14 +1368,16 @@ class LeggedRobot(BaseTask):
             base_pos = (self.root_states[i, :3]).cpu().numpy()
             heights = self.measured_heights[i].cpu().numpy()
             # breakpoint()
-            height_points = quat_apply(self.base_quat[i].repeat(heights.shape[0]), self.height_points[i]).cpu().numpy()
-            # height_points = quat_apply(self.base_quat[i].repeat(self.lidar_points_xyz.shape[1]), self.lidar_points_xyz[i]).cpu().numpy()
-            
+            height_points = quat_apply_yaw(self.base_quat[i].repeat(heights.shape[0]), self.height_points[i]).cpu().numpy()
             foothold_score = self.foothold_score[i, :]
             
             x_all = height_points[:, 0] + base_pos[0].repeat(height_points.shape[0])
             y_all = height_points[:, 1] + base_pos[1].repeat(height_points.shape[0])
-            z_all = heights
+            z_all = heights   
+            
+            x_all = self.heights_world[i, :, 0].cpu().numpy()
+            y_all = self.heights_world[i, :, 1].cpu().numpy()
+            # z_all = self.heights_world[i, :, 2].cpu().numpy()
             in_range_all = None
             min_dis = None
             for pos in self.pred_footholds[i, :]:
@@ -1395,8 +1407,8 @@ class LeggedRobot(BaseTask):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
                 if score > 0.1:
                     gymutil.draw_lines(foothold_range_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
-                # else:
-                #     gymutil.draw_lines(sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
+                else:
+                    gymutil.draw_lines(sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
                 # gymutil.draw_lines(foothold_range_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
                 
             
