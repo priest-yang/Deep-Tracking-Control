@@ -16,7 +16,7 @@ class LeggedRobotCfg(BaseConfig):
     class terrain:
         mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
         # mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
-        horizontal_scale = 0.1 # [m] ->0.05
+        horizontal_scale = 0.05 # [m] ->0.05
         vertical_scale = 0.005 # [m]
         border_size = 20 # [m]
         #! changed by wz
@@ -58,7 +58,7 @@ class LeggedRobotCfg(BaseConfig):
         # num_cols = 4 # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
         #! changed by shaoze
-        terrain_proportions = [0, .1, .1, .1, .2, .3, .2]
+        terrain_proportions = [0, 0., .0, .0, .5, .5, .0]
         # terrain_proportions = [0, 0, .5,.5, 0]
         # trimesh only:
         slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces

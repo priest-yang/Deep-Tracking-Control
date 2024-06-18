@@ -225,7 +225,7 @@ class LeggedRobot(BaseTask):
             #! added by shaoze
             #! foothold score based on "Perceptive Locomotion in Rough Terrain"
             measured_heights_grid = self.measured_heights.view(self.num_envs, len(self.cfg.terrain.measured_points_x), len(self.cfg.terrain.measured_points_y))
-            measured_heights_grid.clamp_(min=-0.3, max=0.3)
+            measured_heights_grid.clamp_(min=-0.5, max=0.5)
             d_x,d_y = torch.gradient(measured_heights_grid, dim=[1,2], spacing = 0.05) #! TODO: spacing should be changed when the resolution of the terrain is changed
             self.slope = torch.sqrt(d_x**2 + d_y**2)
             h_mean = torch.mean(measured_heights_grid, dim=(1,2))
@@ -1426,7 +1426,7 @@ class LeggedRobot(BaseTask):
             
             for x,y,z, score in zip(x_all, y_all, z_all, foothold_score):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
-                if score > 0.5 and score < 8:
+                if score > 0.7 and score < 8:
                     gymutil.draw_lines(foothold_edge_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
                 # else:
                 #     gymutil.draw_lines(sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
