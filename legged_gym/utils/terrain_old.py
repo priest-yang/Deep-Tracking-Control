@@ -99,12 +99,12 @@ class Terrain:
         #! train first
         # step_height = 0.05 + 0.13 * difficulty
         #! train after
-        step_height = 0.05 + 0.18 * difficulty
+        step_height = 0.05 + 0.13 * difficulty
 
         discrete_obstacles_height = 0.05 + difficulty * 0.15
         stone_distance = 0.05 if difficulty==0 else 0.1
-        gap_size = 1. * difficulty 
-        pit_depth = 1. * difficulty 
+        gap_size = .8 * difficulty 
+        pit_depth = .8 * difficulty 
 
         
         if choice < self.proportions[0]:
@@ -124,11 +124,11 @@ class Terrain:
             rectangle_max_size = 2.
             terrain_utils.discrete_obstacles_terrain(terrain, discrete_obstacles_height, rectangle_min_size, rectangle_max_size, num_rectangles, platform_size=3.)
         elif choice < self.proportions[5]:
-            terrain_utils.stepping_stones_terrain(terrain, stone_size=stepping_stones_size, stone_distance=stone_distance, max_height=0., platform_size=4.)
+            terrain_utils.stepping_stones_terrain(terrain, stone_size=stepping_stones_size, stone_distance=stone_distance, max_height=0., platform_size=1.)
         elif choice < self.proportions[6]:
-            gap_terrain(terrain, gap_size=gap_size, platform_size=3.)
+            gap_terrain(terrain, gap_size=gap_size, platform_size=1.)
         else:
-            pit_terrain(terrain, depth=pit_depth, platform_size=4.)
+            pit_terrain(terrain, depth=pit_depth, platform_size=1.)
         
         return terrain
 
@@ -154,7 +154,7 @@ class Terrain:
 def gap_terrain(terrain, gap_size, platform_size=1.):
     gap_size = int(gap_size / terrain.horizontal_scale)
     platform_size = int(platform_size / terrain.horizontal_scale)
-
+    # print("!!!!!!!!!!!")
     center_x = terrain.length // 2
     center_y = terrain.width // 2
     x1 = (terrain.length - platform_size) // 2

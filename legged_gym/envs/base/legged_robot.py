@@ -269,7 +269,7 @@ class LeggedRobot(BaseTask):
             
             
             optimal_values, optimal_indices = torch.topk(foothold_score, k=3, dim=1, largest=False, sorted=True)
-            self.optimal_foothold = optimal_indices
+            self.optimal_foothold_indice = optimal_indices
             
             
                             
@@ -1371,7 +1371,7 @@ class LeggedRobot(BaseTask):
         # hip_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.05, color=(1, 1, 0))
         
         base_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.1, color=(0, 0, 1))
-        foothold_nominal_sphere_geom= gymutil.WireframeSphereGeometry(radius=0.025, color=(0, 0, 1))
+        foothold_nominal_sphere_geom= gymutil.WireframeSphereGeometry(radius=0.035, color=(0, 0, 1))
         foothold_edge_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.03, color=(1, 0, 0))
         foothold_optimal_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.03, color=(0, 1, 0))
         sphere_geom = gymutil.WireframeSphereGeometry(0.03, 4, 4, None, color=(1, 1, 0))
@@ -1386,7 +1386,7 @@ class LeggedRobot(BaseTask):
             # heights = self.measured_heights[i].cpu().numpy()
             # breakpoint()
             # height_points = quat_apply_yaw(self.base_quat[i].repeat(heights.shape[0]), self.height_points[i]).cpu().numpy()
-            foothold_score = self.foothold_score[i, :]
+            # foothold_score = self.foothold_score[i, :]
             
             # x_all = height_points[:, 0] + base_pos[0].repeat(height_points.shape[0])
             # y_all = height_points[:, 1] + base_pos[1].repeat(height_points.shape[0])
@@ -1395,26 +1395,25 @@ class LeggedRobot(BaseTask):
             x_all = self.heights_world[i, :, 0].cpu().numpy()
             y_all = self.heights_world[i, :, 1].cpu().numpy()
             z_all = self.heights_world[i, :, 2].cpu().numpy()
-            in_range_all = None
-            min_dis = None
             
-            
-            for pos in self.pred_footholds[i, :]:
-                dist = (pos[0].cpu() - x_all)**2 + (pos[1].cpu() - y_all)**2
-                in_range = torch.where(dist < 0.08)[0]
-                if in_range_all is not None:
-                    in_range_all = torch.cat((in_range_all, in_range))
-                else:
-                    in_range_all = in_range
+            # in_range_all = None
+            # min_dis = None
+            # for pos in self.pred_footholds[i, :]:
+            #     dist = (pos[0].cpu() - x_all)**2 + (pos[1].cpu() - y_all)**2
+            #     in_range = torch.where(dist < 0.08)[0]
+            #     if in_range_all is not None:
+            #         in_range_all = torch.cat((in_range_all, in_range))
+            #     else:
+            #         in_range_all = in_range
                     
-                if min_dis is not None:
-                    min_dis = torch.min(min_dis, dist)
-                else: 
-                    min_dis = dist
+            #     if min_dis is not None:
+            #         min_dis = torch.min(min_dis, dist)
+            #     else: 
+            #         min_dis = dist
             
             # min_dis = 1 / min_dis
             # min_dis = torch.clamp(min_dis, 0, 5)
-            min_dis_score = torch.nn.functional.normalize(min_dis, dim=0)
+            # min_dis_score = torch.nn.functional.normalize(min_dis, dim=0)
             
             # foothold_score = foothold_score.cpu()*0.8 + min_dis_score.cpu()*0.2
             foothold_score = torch.min(self.foothold_score, dim=2)[0][i, :].cpu()
@@ -1436,20 +1435,21 @@ class LeggedRobot(BaseTask):
             
             #! nominal foot_hold
             nominal_footholds_indice = self.nominal_footholds_indice[i, :].cpu().numpy()
-            nominal_footholds = x_all[nominal_footholds_indice]
+            nominal_footholds_x = x_all[nominal_footholds_indice]
             nominal_footholds_y = y_all[nominal_footholds_indice]
             nominal_footholds_z = z_all[nominal_footholds_indice]
             
-            for x,y,z in zip(nominal_footholds, nominal_footholds_y, nominal_footholds_z):
+            for x,y,z in zip(nominal_footholds_x, nominal_footholds_y, nominal_footholds_z):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
                 gymutil.draw_lines(foothold_nominal_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
             
             
             #! draw optimal indices
-            optimal_foothold = self.optimal_foothold[i, :].flatten().cpu().numpy()
-            optimal_foothold_x = x_all[optimal_foothold]
-            optimal_foothold_y = y_all[optimal_foothold]
-            optimal_foothold_z = z_all[optimal_foothold]
+            optimal_foothold_indice = self.optimal_foothold_indice[i, :].flatten().cpu().numpy()
+            optimal_foothold_x = x_all[optimal_foothold_indice]
+            optimal_foothold_y = y_all[optimal_foothold_indice]
+            optimal_foothold_z = z_all[optimal_foothold_indice]
+            
             
             for x,y,z in zip(optimal_foothold_x, optimal_foothold_y, optimal_foothold_z):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
