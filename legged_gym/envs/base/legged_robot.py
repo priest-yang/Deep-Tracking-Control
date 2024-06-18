@@ -257,6 +257,10 @@ class LeggedRobot(BaseTask):
             # clip the dis with filling dis > 0.1 with 1.0, these points will be filtered
             dis_to_nominal = torch.where(dis_to_nominal < 0.1, dis_to_nominal, torch.tensor(10.0, dtype=torch.float, device=self.device) )
             
+            #! for debug & visualize
+            # breakpoint()
+            self.nominal_footholds_indice = dis_to_nominal.min(dim=1)[1]
+            
             foothold_score = foothold_score.unsqueeze(2).repeat(1,1,4)
             
             foothold_score = foothold_score * 0.2 + dis_to_nominal * 0.8
@@ -264,7 +268,7 @@ class LeggedRobot(BaseTask):
             # foothold_score: [num_envs, num_points, 4] (each point respect to each foothold)
             
             
-            optimal_values, optimal_indices = torch.topk(foothold_score, k=5, dim=1, largest=False, sorted=True)
+            optimal_values, optimal_indices = torch.topk(foothold_score, k=3, dim=1, largest=False, sorted=True)
             self.optimal_foothold = optimal_indices
             
             
@@ -1367,26 +1371,26 @@ class LeggedRobot(BaseTask):
         # hip_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.05, color=(1, 1, 0))
         
         base_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.1, color=(0, 0, 1))
-        foothold_center_sphere_geom= gymutil.WireframeSphereGeometry(radius=0.05, color=(0, 0, 1))
+        foothold_nominal_sphere_geom= gymutil.WireframeSphereGeometry(radius=0.025, color=(0, 0, 1))
         foothold_edge_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.03, color=(1, 0, 0))
         foothold_optimal_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.03, color=(0, 1, 0))
         sphere_geom = gymutil.WireframeSphereGeometry(0.03, 4, 4, None, color=(1, 1, 0))
+        command_hip = gymutil.WireframeSphereGeometry(radius=0.05, color=(1, 1, 0))
+        
         # draw height lines
         if self.terrain.cfg.measure_heights:
             # self.gym.clear_lines(self.viewer)
             
-            # for i in range(self.num_envs):
-            # self.lookat_id = 499
             i = self.lookat_id
-            base_pos = (self.root_states[i, :3]).cpu().numpy()
-            heights = self.measured_heights[i].cpu().numpy()
+            # base_pos = (self.root_states[i, :3]).cpu().numpy()
+            # heights = self.measured_heights[i].cpu().numpy()
             # breakpoint()
-            height_points = quat_apply_yaw(self.base_quat[i].repeat(heights.shape[0]), self.height_points[i]).cpu().numpy()
+            # height_points = quat_apply_yaw(self.base_quat[i].repeat(heights.shape[0]), self.height_points[i]).cpu().numpy()
             foothold_score = self.foothold_score[i, :]
             
-            x_all = height_points[:, 0] + base_pos[0].repeat(height_points.shape[0])
-            y_all = height_points[:, 1] + base_pos[1].repeat(height_points.shape[0])
-            z_all = heights   
+            # x_all = height_points[:, 0] + base_pos[0].repeat(height_points.shape[0])
+            # y_all = height_points[:, 1] + base_pos[1].repeat(height_points.shape[0])
+            # z_all = heights   
             
             x_all = self.heights_world[i, :, 0].cpu().numpy()
             y_all = self.heights_world[i, :, 1].cpu().numpy()
@@ -1416,17 +1420,29 @@ class LeggedRobot(BaseTask):
             foothold_score = torch.min(self.foothold_score, dim=2)[0][i, :].cpu()
             # breakpoint()
             
-            in_range_points_x = x_all[in_range_all]
-            in_range_points_y = y_all[in_range_all]
-            in_range_points_z = z_all[in_range_all]
-            scores = foothold_score[in_range_all]
-            for x,y,z, score in zip(in_range_points_x, in_range_points_y, in_range_points_z, scores):
+            # in_range_points_x = x_all[in_range_all]
+            # in_range_points_y = y_all[in_range_all]
+            # in_range_points_z = z_all[in_range_all]
+            # scores = foothold_score[in_range_all]
+            
+            for x,y,z, score in zip(x_all, y_all, z_all, foothold_score):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
-                if score > 0.5 and score < 3:
+                if score > 0.5 and score < 8:
                     gymutil.draw_lines(foothold_edge_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
                 # else:
                 #     gymutil.draw_lines(sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
                 # gymutil.draw_lines(foothold_edge_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
+            
+            
+            #! nominal foot_hold
+            nominal_footholds_indice = self.nominal_footholds_indice[i, :].cpu().numpy()
+            nominal_footholds = x_all[nominal_footholds_indice]
+            nominal_footholds_y = y_all[nominal_footholds_indice]
+            nominal_footholds_z = z_all[nominal_footholds_indice]
+            
+            for x,y,z in zip(nominal_footholds, nominal_footholds_y, nominal_footholds_z):
+                sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
+                gymutil.draw_lines(foothold_nominal_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
             
             
             #! draw optimal indices
@@ -1439,22 +1455,9 @@ class LeggedRobot(BaseTask):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
                 gymutil.draw_lines(foothold_optimal_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
             
+            
 
         #! shaoze
-        
-        # if True:
-        #     sphere_geom_arrow = gymutil.WireframeSphereGeometry(0.02, 16, 16, None, color=(1, 0.35, 0.25))
-        #     pose_robot = self.root_states[self.lookat_id, :3].cpu().numpy()
-        #     for i in range(5):
-        #         norm = torch.norm(self.stair_vector, dim=-1, keepdim=True)
-        #         target_vec_norm = self.stair_vector / (norm + 1e-5)
-        #         pose_arrow = pose_robot[:3] + 0.1*(i+3) * target_vec_norm[self.lookat_id, :3].cpu().numpy()
-        #         pose = gymapi.Transform(gymapi.Vec3(pose_arrow[0], pose_arrow[1], pose_arrow[2]), r=None)
-        #         gymutil.draw_lines(sphere_geom_arrow, self.gym, self.viewer, self.envs[self.lookat_id], pose)
-        #     sphere_geom_arrow = gymutil.WireframeSphereGeometry(0.02, 16, 16, None, color=(0, 1, 0.5))
-        
-                
-        # for i in range(self.num_envs):
         i = self.lookat_id
         
         #! hip position
@@ -1464,7 +1467,7 @@ class LeggedRobot(BaseTask):
         
         for foothold in self.pred_footholds[i, :]:
             sphere_pose = gymapi.Transform(gymapi.Vec3(*foothold), r=None)
-            gymutil.draw_lines(foothold_center_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose) 
+            gymutil.draw_lines(command_hip, self.gym, self.viewer, self.envs[i], sphere_pose) 
 
         
     def _init_height_points(self):
