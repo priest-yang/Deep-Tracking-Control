@@ -238,7 +238,8 @@ class LeggedRobot(BaseTask):
             lambda_1, lambda_2, lambda_3 = 0.2, 0.5, 0.3
             foothold_score = lambda_1 * edge + lambda_2 * self.slope + lambda_3 * roughness
             
-            self.foothold_score = foothold_score.view(self.num_envs, -1)
+            foothold_score = foothold_score.view(self.num_envs, -1)
+            foothold_score = torch.where(foothold_score < 0.1, foothold_score, torch.tensor(10.0, dtype=torch.float, device=self.device) )
             
             # take distance to nomimal foothold
             # breakpoint()
@@ -246,20 +247,31 @@ class LeggedRobot(BaseTask):
             quat_flattened = self.base_quat.repeat(1, self.measured_heights.shape[1]).flatten()
             heights_world = quat_apply_yaw(quat_flattened, height_points_flattened) 
             self.heights_world = heights_world.reshape(self.num_envs, -1, 3) + self.base_pos.unsqueeze(1).repeat(1, len(self.cfg.terrain.measured_points_x)*len(self.cfg.terrain.measured_points_y), 1)
-            self.heights_world[:, : 2] = self.measured_heights[:, : 2]
+            self.heights_world[:, :, 2] = self.measured_heights
             
-            for i in range(4):
-                pos_0 = self.pred_footholds[:, i, :]
-                pos_1 = self.pred_footholds[:, i, :]
-                
-                # heights_world = quat_apply()
-                
+            footholds_repeated_envs = self.pred_footholds.unsqueeze(1).repeat(1, len(self.cfg.terrain.measured_points_x)*len(self.cfg.terrain.measured_points_y), 1, 1)
+            heights_world_repeated4 = self.heights_world.unsqueeze(2).repeat(1,1,4,1)
+            
+            dis_to_nominal = torch.norm(footholds_repeated_envs[:, :, :, :-1] - heights_world_repeated4[:, :, :, :-1], dim=-1)            
+            # dis_to_nominal: [num_envs, num_points, 4]
+            # clip the dis with filling dis > 0.1 with 1.0, these points will be filtered
+            dis_to_nominal = torch.where(dis_to_nominal < 0.1, dis_to_nominal, torch.tensor(10.0, dtype=torch.float, device=self.device) )
+            
+            foothold_score = foothold_score.unsqueeze(2).repeat(1,1,4)
+            
+            foothold_score = foothold_score * 0.2 + dis_to_nominal * 0.8
+            self.foothold_score = foothold_score
+            # foothold_score: [num_envs, num_points, 4] (each point respect to each foothold)
+            
+            
+            optimal_values, optimal_indices = torch.topk(foothold_score, k=5, dim=1, largest=False, sorted=True)
+            self.optimal_foothold = optimal_indices
+            
+            
                             
             
             # breakpoint()
 
-        
-        
         ###########################################################################
 
         if self.viewer and self.enable_viewer_sync and self.debug_viz:
@@ -1356,7 +1368,8 @@ class LeggedRobot(BaseTask):
         
         base_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.1, color=(0, 0, 1))
         foothold_center_sphere_geom= gymutil.WireframeSphereGeometry(radius=0.05, color=(0, 0, 1))
-        foothold_range_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.03, color=(1, 0, 0))
+        foothold_edge_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.03, color=(1, 0, 0))
+        foothold_optimal_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.03, color=(0, 1, 0))
         sphere_geom = gymutil.WireframeSphereGeometry(0.03, 4, 4, None, color=(1, 1, 0))
         # draw height lines
         if self.terrain.cfg.measure_heights:
@@ -1377,9 +1390,11 @@ class LeggedRobot(BaseTask):
             
             x_all = self.heights_world[i, :, 0].cpu().numpy()
             y_all = self.heights_world[i, :, 1].cpu().numpy()
-            # z_all = self.heights_world[i, :, 2].cpu().numpy()
+            z_all = self.heights_world[i, :, 2].cpu().numpy()
             in_range_all = None
             min_dis = None
+            
+            
             for pos in self.pred_footholds[i, :]:
                 dist = (pos[0].cpu() - x_all)**2 + (pos[1].cpu() - y_all)**2
                 in_range = torch.where(dist < 0.08)[0]
@@ -1397,7 +1412,9 @@ class LeggedRobot(BaseTask):
             # min_dis = torch.clamp(min_dis, 0, 5)
             min_dis_score = torch.nn.functional.normalize(min_dis, dim=0)
             
-            foothold_score = foothold_score.cpu()*0.8 + min_dis_score.cpu()*0.2
+            # foothold_score = foothold_score.cpu()*0.8 + min_dis_score.cpu()*0.2
+            foothold_score = torch.min(self.foothold_score, dim=2)[0][i, :].cpu()
+            # breakpoint()
             
             in_range_points_x = x_all[in_range_all]
             in_range_points_y = y_all[in_range_all]
@@ -1405,12 +1422,22 @@ class LeggedRobot(BaseTask):
             scores = foothold_score[in_range_all]
             for x,y,z, score in zip(in_range_points_x, in_range_points_y, in_range_points_z, scores):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
-                if score > 0.1:
-                    gymutil.draw_lines(foothold_range_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
-                else:
-                    gymutil.draw_lines(sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
-                # gymutil.draw_lines(foothold_range_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
-                
+                if score > 0.5 and score < 3:
+                    gymutil.draw_lines(foothold_edge_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
+                # else:
+                #     gymutil.draw_lines(sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
+                # gymutil.draw_lines(foothold_edge_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
+            
+            
+            #! draw optimal indices
+            optimal_foothold = self.optimal_foothold[i, :].flatten().cpu().numpy()
+            optimal_foothold_x = x_all[optimal_foothold]
+            optimal_foothold_y = y_all[optimal_foothold]
+            optimal_foothold_z = z_all[optimal_foothold]
+            
+            for x,y,z in zip(optimal_foothold_x, optimal_foothold_y, optimal_foothold_z):
+                sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
+                gymutil.draw_lines(foothold_optimal_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
             
 
         #! shaoze
