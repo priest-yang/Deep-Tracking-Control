@@ -37,6 +37,10 @@ class LeggedRobotCfg(BaseConfig):
         measured_points_x = [-0.8, -0.75, -0.7, -0.65, -0.6, -0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0., 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
         measured_points_y = [-0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0., 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
         num_height_points = 33 * 21
+        measured_x_dim = 33
+        measured_y_dim = 21
+        
+        
         # body_center_slice = [10 * 21: (33-10)*21] #[344-21, 345-21, 346-21, 347-21, 344, 345, 346, 347, 344+21, 345+21, 346+21, 347+21]
         
         selected = False # select a unique terrain type and pass all arguments
@@ -269,7 +273,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         max_grad_norm = 1.
 
     class runner:
-        policy_class_name = 'ActorCritic_Decoder'
+        policy_class_name = 'ActorCriticDecoder'
         algorithm_class_name = 'PPO'
         num_steps_per_env = 24 # per iteration
         max_iterations = 1500 # number of policy updates

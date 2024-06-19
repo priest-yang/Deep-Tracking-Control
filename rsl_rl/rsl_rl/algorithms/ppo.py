@@ -34,13 +34,13 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 # from rsl_rl.modules import ActorCritic_TS
-from rsl_rl.modules import ActorCritic_Decoder
+from rsl_rl.modules import ActorCriticDecoder
 from rsl_rl.storage import RolloutStorage
 import itertools
 from rsl_rl.utils import unpad_trajectories
 
 class PPO:
-    actor_critic: ActorCritic_Decoder
+    actor_critic: ActorCriticDecoder
 
     def __init__(self,
                  actor_critic,
@@ -195,7 +195,9 @@ class PPO:
 
             #! changed by wz 2
             latent_mu, latent_var, z = self.actor_critic.vae.cenet_forward(obs_history_batch)
-            recons = self.actor_critic.vae.cenet_decoder(torch.cat([z, latent_mu[:,:3]], dim = 1))
+            
+            l_t = self.actor_critic.vae.terrain_encoder(privileged_obs_batch[:,:693])
+            recons = self.actor_critic.vae.cenet_decoder(torch.cat([z, latent_mu[:,:3],l_t], dim = 1))
             # recons = self.actor_critic.vae.cenet_decoder(latent_mu)
             
 

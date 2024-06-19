@@ -37,7 +37,7 @@ from torch.utils.tensorboard import SummaryWriter
 import torch
 
 from rsl_rl.algorithms import PPO
-from rsl_rl.modules import ActorCritic, ActorCriticRecurrent,ActorCritic_Decoder
+from rsl_rl.modules import ActorCritic, ActorCriticRecurrent,ActorCriticDecoder
 from rsl_rl.env import VecEnv
 from rsl_rl.env.wrappers.history_wrapper import HistoryWrapper
 import torch.nn.functional as F
@@ -59,7 +59,9 @@ class OnPolicyRunner:
             num_critic_obs = self.env.num_privileged_obs 
         else:
             num_critic_obs = self.env.num_obs
-        actor_critic_class = eval(self.cfg["policy_class_name"]) # ActorCritic
+        actor_critic_class = eval(self.cfg["policy_class_name"]) # ActorCriticDecoder
+        # ActorCritic Decoder
+
         actor_critic: ActorCritic = actor_critic_class( self.env.num_obs,
                                                         num_critic_obs,
                                                         self.env.num_actions,

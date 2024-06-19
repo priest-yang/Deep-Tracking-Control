@@ -31,4 +31,4 @@
 from .actor_critic import ActorCritic
 from .actor_critic_recurrent import ActorCriticRecurrent
 # from .actor_critic_ts import ActorCritic_TS
-from .actor_critic_decoder import ActorCritic_Decoder
+from .actor_critic_decoder import ActorCriticDecoder

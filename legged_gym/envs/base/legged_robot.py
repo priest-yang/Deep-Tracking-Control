@@ -172,28 +172,10 @@ class LeggedRobot(BaseTask):
         self.foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices,
                               0:3]
         
-        
         ##PMTrajectoryGenerator test:###
         # self.cpg_phase_information = self.pmtg.update_observation()
 
         self._post_physics_step_callback()
-
-        # compute observations, rewards, resets, ...
-        self.check_termination()
-        self.compute_reward()
-        env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
-        self.reset_idx(env_ids)
-        self.compute_observations() # in some cases a simulation step might be required to refresh some obs (for example body positions)
-        
-        self.last_actions_2[:] = self.last_actions[:]
-        self.last_actions[:] = self.actions[:]
-        self.last_dof_vel[:] = self.dof_vel[:]
-        self.last_root_vel[:] = self.root_states[:, 7:13]
-        self.last_foot_velocities[:] = self.foot_velocities[:]
-
-        #! added by wz
-        self.base_ang_vel_last = self.base_ang_vel.clone()
-        self.base_lin_vel_last = self.base_lin_vel.clone()
         
         ###########################################################################
         #! added by shaoze
@@ -222,7 +204,6 @@ class LeggedRobot(BaseTask):
         
         #! DTC foothold score computation based on terrain
         if self.cfg.terrain.measure_heights:
-            #! added by shaoze
             #! foothold score based on "Perceptive Locomotion in Rough Terrain"
             measured_heights_grid = self.measured_heights.view(self.num_envs, len(self.cfg.terrain.measured_points_x), len(self.cfg.terrain.measured_points_y))
             
@@ -262,32 +243,55 @@ class LeggedRobot(BaseTask):
             dis_to_nominal = torch.where(dis_to_nominal < 0.1, dis_to_nominal, torch.tensor(10.0, dtype=torch.float, device=self.device) )
             
             #! for debug & visualize
-            # breakpoint()
             self.nominal_footholds_indice = dis_to_nominal.min(dim=1)[1]
             
             foothold_score = foothold_score.unsqueeze(2).repeat(1,1,4)
-            
             foothold_score = foothold_score * 0.2 + dis_to_nominal * 0.8
             
             #! filter exceptional points
             foothold_score = torch.where(exception_heights.view(self.num_envs, -1).unsqueeze(2).repeat(1,1,4), torch.tensor(10.0, dtype=torch.float, device=self.device), foothold_score)
             
             self.foothold_score = foothold_score
-            
-            
             # foothold_score: [num_envs, num_points, 4] (each point respect to each foothold)
             
-            
-            optimal_values, optimal_indices = torch.topk(foothold_score, k=3, dim=1, largest=False, sorted=True)
+            # get the top n footholds
+            ktop_num = 1 
+            optimal_values, optimal_indices = torch.topk(foothold_score, k=ktop_num, dim=1, largest=False, sorted=True)
             self.optimal_foothold_indice = optimal_indices
             
-            
-                            
-            
-            # breakpoint()
+            #! compute for observation
+            x_indices = torch.remainder(optimal_indices, self.cfg.terrain.measured_y_dim)
+            y_indices = torch.div(optimal_indices, self.cfg.terrain.measured_y_dim, rounding_mode='trunc')
 
+            # Map matrix indices to actual x, y values
+            measured_points_x = torch.tensor(self.cfg.terrain.measured_points_x).unsqueeze(0).unsqueeze(0).repeat(self.num_envs, ktop_num, 4).to(self.device)
+            measured_points_y = torch.tensor(self.cfg.terrain.measured_points_y).unsqueeze(0).unsqueeze(0).repeat(self.num_envs, ktop_num, 4).to(self.device)
+            
+            decoded_x_values = torch.gather(measured_points_x, -1, x_indices)
+            decoded_y_values = torch.gather(measured_points_y, -1, y_indices)
+            
+            foothold_obs = torch.cat((decoded_x_values, decoded_y_values), dim=-2)
+            self.foothold_obs = foothold_obs.view(self.num_envs, -1)
+            
         ###########################################################################
 
+        # compute observations, rewards, resets, ...
+        self.check_termination()
+        self.compute_reward()
+        env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
+        self.reset_idx(env_ids)
+        self.compute_observations() # in some cases a simulation step might be required to refresh some obs (for example body positions)
+        
+        self.last_actions_2[:] = self.last_actions[:]
+        self.last_actions[:] = self.actions[:]
+        self.last_dof_vel[:] = self.dof_vel[:]
+        self.last_root_vel[:] = self.root_states[:, 7:13]
+        self.last_foot_velocities[:] = self.foot_velocities[:]
+
+        #! added by wz
+        self.base_ang_vel_last = self.base_ang_vel.clone()
+        self.base_lin_vel_last = self.base_lin_vel.clone()
+        
         if self.viewer and self.enable_viewer_sync and self.debug_viz:
             self._draw_debug_vis()
 
@@ -441,14 +445,21 @@ class LeggedRobot(BaseTask):
 
         #PMTrajectoryGenerator test:###
         cpg_phase_information = self.cpg_phase_information
-
-        self.obs_buf = torch.cat((  self.base_ang_vel  * self.obs_scales.ang_vel,
+        
+        #! no teacher-student arch
+        self.obs_buf = torch.cat((  
+                                
+                                    self.base_ang_vel  * self.obs_scales.ang_vel,
                                     self.projected_gravity, #* self.obs_scales.gravity,
                                     self.commands[:, :3] * self.commands_scale,
                                     (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
                                     self.dof_vel * self.obs_scales.dof_vel,
                                     self.actions,
                                     # cpg_phase_information *1.0 #PMTrajectoryGenerator test:###
+                                    ###############################
+                                    #! DTC
+                                    self.foothold_obs, # 2 * 4 = 8
+                                    ###############################
                                     ),dim=-1)
         
         if self.cfg.terrain.measure_heights:
@@ -472,13 +483,16 @@ class LeggedRobot(BaseTask):
                 # 1.0*(torch.norm(self.contact_forces[:, self.collision_contact_indices, :], dim=-1) > 0.1),
                 self.heights ,
                 # (self.motor_strengths - motor_strengths_shift) * motor_strengths_scale,  # motor strength
-            ), dim=1)   
+
+                
+                
+            ), dim=1)
 
         # add noise if needed
         if self.add_noise:
             # print('self.noise_scale_vec: ',self.noise_scale_vec)
             # print('obs_buf',self.obs_buf)
-            self.obs_buf += (2 * torch.rand_like(self.obs_buf) - 1) * self.noise_scale_vec[:45]
+            self.obs_buf += (2 * torch.rand_like(self.obs_buf) - 1) * self.noise_scale_vec[:53]
             # print('obs_buf_after',self.obs_buf)
 
     def create_sim(self):
@@ -831,9 +845,9 @@ class LeggedRobot(BaseTask):
         noise_vec[6:9] = 0. # commands
         noise_vec[9:21] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
         noise_vec[21:33] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
-        noise_vec[33:45] = 0. # previous actions
+        noise_vec[33:53] = 0. # previous actions
         if self.cfg.terrain.measure_heights:
-            noise_vec[45:232] = noise_scales.height_measurements* noise_level * self.obs_scales.height_measurements
+            noise_vec[53:746] = noise_scales.height_measurements* noise_level * self.obs_scales.height_measurements
         return noise_vec
 
     #----------------------------------------
