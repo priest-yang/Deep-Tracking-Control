@@ -225,6 +225,10 @@ class LeggedRobot(BaseTask):
             #! added by shaoze
             #! foothold score based on "Perceptive Locomotion in Rough Terrain"
             measured_heights_grid = self.measured_heights.view(self.num_envs, len(self.cfg.terrain.measured_points_x), len(self.cfg.terrain.measured_points_y))
+            
+            #! filter exceptional points
+            exception_heights = (measured_heights_grid > 1) | (measured_heights_grid < -1)
+            
             measured_heights_grid.clamp_(min=-0.5, max=0.5)
             d_x,d_y = torch.gradient(measured_heights_grid, dim=[1,2], spacing = 0.05) #! TODO: spacing should be changed when the resolution of the terrain is changed
             self.slope = torch.sqrt(d_x**2 + d_y**2)
@@ -264,7 +268,13 @@ class LeggedRobot(BaseTask):
             foothold_score = foothold_score.unsqueeze(2).repeat(1,1,4)
             
             foothold_score = foothold_score * 0.2 + dis_to_nominal * 0.8
+            
+            #! filter exceptional points
+            foothold_score = torch.where(exception_heights.view(self.num_envs, -1).unsqueeze(2).repeat(1,1,4), torch.tensor(10.0, dtype=torch.float, device=self.device), foothold_score)
+            
             self.foothold_score = foothold_score
+            
+            
             # foothold_score: [num_envs, num_points, 4] (each point respect to each foothold)
             
             
@@ -296,7 +306,8 @@ class LeggedRobot(BaseTask):
         #! X30
         # self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:, 55:132], dim=1)) < 0.25)
         #! lite3
-        self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:, 55:132], dim=1)) < 0.1)
+        
+        self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:, 10 * 21: (33-10)*21], dim=1)) < 0.1) #! 55-132 changed according to terrain resolution
 
     def reset_idx(self, env_ids):
         """ Reset some environments.

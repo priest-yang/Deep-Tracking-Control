@@ -1,0 +1,86 @@
+#-----------------------------------------------------------
+# Vivado v2023.2 (64-bit)
+# SW Build 4029153 on Fri Oct 13 20:13:54 MDT 2023
+# IP Build 4028589 on Sat Oct 14 00:45:43 MDT 2023
+# SharedData Build 4025554 on Tue Oct 10 17:18:54 MDT 2023
+# Start of session at: Tue Jun 18 20:33:56 2024
+# Process ID: 323058
+# Current directory: /home/shaoze/Documents/DeepRobotics/Deep-Tracking-Control
+# Command line: vivado
+# Log file: /home/shaoze/Documents/DeepRobotics/Deep-Tracking-Control/vivado.log
+# Journal file: /home/shaoze/Documents/DeepRobotics/Deep-Tracking-Control/vivado.jou
+# Running On: shaoze-ThinkPad-P1-Gen-5, OS: Linux, CPU Frequency: 1754.821 MHz, CPU Physical cores: 14, Host memory: 33326 MB
+#-----------------------------------------------------------
+start_gui
+create_project Lab3_optimized /home/shaoze/Documents/ECE4700J/Lab3/Lab3_optimized -part xc7k160tfbg676-3
+add_files -norecurse -scan_for_includes {/home/shaoze/Documents/ECE4700J/Lab3/optimization/sys_defs.svh /home/shaoze/Documents/ECE4700J/Lab3/optimization/ISA.svh}
+import_files -norecurse {/home/shaoze/Documents/ECE4700J/Lab3/optimization/sys_defs.svh /home/shaoze/Documents/ECE4700J/Lab3/optimization/ISA.svh}
+add_files -norecurse -scan_for_includes {/home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/if_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/mem_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/ex_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/id_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/wb_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/pipeline.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/regfile.sv}
+import_files -norecurse {/home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/if_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/mem_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/ex_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/id_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/wb_stage.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/pipeline.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/verilog/regfile.sv}
+update_compile_order -fileset sources_1
+set_property is_global_include true [get_files  /home/shaoze/Documents/ECE4700J/Lab3/Lab3_optimized/Lab3_optimized.srcs/sources_1/imports/optimization/ISA.svh]
+set_property is_global_include true [get_files  /home/shaoze/Documents/ECE4700J/Lab3/Lab3_optimized/Lab3_optimized.srcs/sources_1/imports/optimization/sys_defs.svh]
+set_property SOURCE_SET sources_1 [get_filesets sim_1]
+add_files -fileset sim_1 -norecurse -scan_for_includes {/home/shaoze/Documents/ECE4700J/Lab3/optimization/testbench/riscv_inst.h /home/shaoze/Documents/ECE4700J/Lab3/optimization/program.mem /home/shaoze/Documents/ECE4700J/Lab3/optimization/testbench/pipe_print.c}
+import_files -fileset sim_1 -norecurse {/home/shaoze/Documents/ECE4700J/Lab3/optimization/testbench/riscv_inst.h /home/shaoze/Documents/ECE4700J/Lab3/optimization/program.mem /home/shaoze/Documents/ECE4700J/Lab3/optimization/testbench/pipe_print.c}
+add_files -fileset sim_1 -norecurse -scan_for_includes {/home/shaoze/Documents/ECE4700J/Lab3/optimization/testbench/testbench.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/testbench/mem.sv}
+import_files -fileset sim_1 -norecurse {/home/shaoze/Documents/ECE4700J/Lab3/optimization/testbench/testbench.sv /home/shaoze/Documents/ECE4700J/Lab3/optimization/testbench/mem.sv}
+update_compile_order -fileset sim_1
+update_compile_order -fileset sim_1
+launch_simulation
+launch_runs synth_1 -jobs 10
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 10
+wait_on_run synth_1
+launch_simulation
+source testbench.tcl
+current_wave_config {Untitled 1}
+add_wave {{/testbench/memory/proc2mem_data}} 
+relaunch_sim
+current_wave_config {Untitled 1}
+add_wave {{/testbench/core/ex_stage_0/alu_0/result}} 
+relaunch_sim
+relaunch_sim
+current_wave_config {Untitled 1}
+add_wave {{/testbench/core/ex_stage_0/alu_0/result}} 
+current_wave_config {Untitled 1}
+add_wave {{/testbench/memory/unified_memory}} 
+relaunch_sim
+update_compile_order -fileset sources_1
+update_compile_order -fileset sources_1
+close_sim
+launch_simulation
+source testbench.tcl
+update_compile_order -fileset sources_1
+current_wave_config {}
+add_wave {{/testbench/core/ex_stage_0/alu_0/result}} 
+relaunch_sim
+relaunch_sim
+relaunch_sim
+relaunch_sim
+relaunch_sim
+relaunch_sim
+relaunch_sim
+relaunch_sim
+relaunch_sim
+relaunch_sim
+current_wave_config {Untitled 2}
+add_wave {{/testbench/memory/unified_memory[1000]}} 
+current_wave_config {Untitled 2}
+add_wave {{/testbench/memory/unified_memory[1020]}} {{/testbench/memory/unified_memory[1019]}} {{/testbench/memory/unified_memory[1018]}} {{/testbench/memory/unified_memory[1017]}} {{/testbench/memory/unified_memory[1016]}} {{/testbench/memory/unified_memory[1015]}} {{/testbench/memory/unified_memory[1014]}} {{/testbench/memory/unified_memory[1013]}} {{/testbench/memory/unified_memory[1012]}} {{/testbench/memory/unified_memory[1011]}} {{/testbench/memory/unified_memory[1010]}} 
+relaunch_sim
+close_sim
+launch_simulation
+source testbench.tcl
+close_sim
+launch_simulation
+source testbench.tcl
+close_sim
+set_property -name {xsim.simulate.runtime} -value {1000000ns} -objects [get_filesets sim_1]
+launch_simulation
+source testbench.tcl
+close_sim
+launch_simulation
+source testbench.tcl
+close_sim
