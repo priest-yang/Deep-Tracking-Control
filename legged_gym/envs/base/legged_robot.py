@@ -1437,7 +1437,7 @@ class LeggedRobot(BaseTask):
             
             for x,y,z, score in zip(x_all, y_all, z_all, foothold_score):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
-                if score > 0.7 and score < 8:
+                if score > 0.9 and score < 8:
                     gymutil.draw_lines(foothold_edge_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
                 # else:
                 #     gymutil.draw_lines(sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
