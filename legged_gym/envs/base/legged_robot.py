@@ -255,7 +255,7 @@ class LeggedRobot(BaseTask):
             # foothold_score: [num_envs, num_points, 4] (each point respect to each foothold)
             
             # get the top n footholds
-            ktop_num = 1 
+            ktop_num = 1  #! do not change
             optimal_values, optimal_indices = torch.topk(foothold_score, k=ktop_num, dim=1, largest=False, sorted=True)
             self.optimal_foothold_indice = optimal_indices
             
@@ -272,6 +272,14 @@ class LeggedRobot(BaseTask):
             
             foothold_obs = torch.cat((decoded_x_values, decoded_y_values), dim=-2)
             self.foothold_obs = foothold_obs.view(self.num_envs, -1)
+            
+            #! compute for rewards
+            if ktop_num == 1:
+                optimal_indices = optimal_indices.squeeze(1)
+                batch_indices = torch.arange(optimal_indices.size(0)).unsqueeze(-1).expand_as(optimal_indices)
+                self.optimal_footholds_world = self.heights_world[batch_indices, optimal_indices]
+
+            
             
         ###########################################################################
 
@@ -311,8 +319,14 @@ class LeggedRobot(BaseTask):
         # self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:, 55:132], dim=1)) < 0.25)
         #! lite3
         
-        self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:, 10 * 21: (33-10)*21], dim=1)) < 0.1) #! 55-132 changed according to terrain resolution
-
+        self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
+                                       self.measured_heights[:, 10 * 21: (33-10)*21], 
+                                       dim=1)) < 0.1) #! 55-132 changed according to terrain resolution
+        
+        self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
+                                       self.foot_positions[:, :, 2], 
+                                       dim=1)) < 0.1) 
+        
     def reset_idx(self, env_ids):
         """ Reset some environments.
             Calls self._reset_dofs(env_ids), self._reset_root_states(env_ids), and self._resample_commands(env_ids)
@@ -1407,20 +1421,8 @@ class LeggedRobot(BaseTask):
             # self.gym.clear_lines(self.viewer)
             
             i = self.lookat_id
-            # base_pos = (self.root_states[i, :3]).cpu().numpy()
-            # heights = self.measured_heights[i].cpu().numpy()
-            # breakpoint()
-            # height_points = quat_apply_yaw(self.base_quat[i].repeat(heights.shape[0]), self.height_points[i]).cpu().numpy()
-            # foothold_score = self.foothold_score[i, :]
             
-            # x_all = height_points[:, 0] + base_pos[0].repeat(height_points.shape[0])
-            # y_all = height_points[:, 1] + base_pos[1].repeat(height_points.shape[0])
-            # z_all = heights   
-            
-            x_all = self.heights_world[i, :, 0].cpu().numpy()
-            y_all = self.heights_world[i, :, 1].cpu().numpy()
-            z_all = self.heights_world[i, :, 2].cpu().numpy()
-            
+
             # in_range_all = None
             # min_dis = None
             # for pos in self.pred_footholds[i, :]:
@@ -1441,9 +1443,13 @@ class LeggedRobot(BaseTask):
             # min_dis_score = torch.nn.functional.normalize(min_dis, dim=0)
             
             # foothold_score = foothold_score.cpu()*0.8 + min_dis_score.cpu()*0.2
-            foothold_score = torch.min(self.foothold_score, dim=2)[0][i, :].cpu()
-            # breakpoint()
+
+            x_all = self.heights_world[i, :, 0].cpu().numpy()
+            y_all = self.heights_world[i, :, 1].cpu().numpy()
+            z_all = self.heights_world[i, :, 2].cpu().numpy()
             
+            foothold_score = torch.min(self.foothold_score, dim=2)[0][i, :].cpu()
+
             # in_range_points_x = x_all[in_range_all]
             # in_range_points_y = y_all[in_range_all]
             # in_range_points_z = z_all[in_range_all]
@@ -1470,11 +1476,9 @@ class LeggedRobot(BaseTask):
             
             
             #! draw optimal indices
-            optimal_foothold_indice = self.optimal_foothold_indice[i, :].flatten().cpu().numpy()
-            optimal_foothold_x = x_all[optimal_foothold_indice]
-            optimal_foothold_y = y_all[optimal_foothold_indice]
-            optimal_foothold_z = z_all[optimal_foothold_indice]
-            
+            optimal_foothold_x = self.optimal_footholds_world[i, :, 0].cpu().numpy()
+            optimal_foothold_y = self.optimal_footholds_world[i, :, 1].cpu().numpy()
+            optimal_foothold_z = self.optimal_footholds_world[i, :, 2].cpu().numpy()
             
             for x,y,z in zip(optimal_foothold_x, optimal_foothold_y, optimal_foothold_z):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
@@ -1633,10 +1637,6 @@ class LeggedRobot(BaseTask):
 
         return torch.sum(torch.abs(delta_vel)*vel_positive_flag+ torch.abs(delta_vel)*vel_negative_flag, dim=1)
 
-
-
-
-
     
     def _reward_tracking_ang_vel(self):
         # Tracking of angular velocity commands (yaw) 
@@ -1691,7 +1691,6 @@ class LeggedRobot(BaseTask):
         # rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.2 #no reward for zero command
         self.feet_air_time *= ~contact_filt
 
-        
         #! changed by wz !!!!!!!!!!!!!!
         return rew_airTime
         # return rew_airTime_stand
@@ -1726,6 +1725,14 @@ class LeggedRobot(BaseTask):
     def _reward_smooth(self):
         return torch.sum(torch.square(self.actions - 2*self.last_actions+self.last_actions_2), dim=1)
     
+
+    #! DTC 
+    # tracking optimal footholds
+    def _reward_tracking_optimal_footholds(self):
+        dis = self.foot_positions[:, :, :-1] - self.optimal_footholds_world[:, :, :-1]
+        dis = torch.norm(dis, dim = -1)
+        
+        
 
 
     def get_plane_norm(self):

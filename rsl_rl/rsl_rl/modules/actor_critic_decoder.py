@@ -364,12 +364,6 @@ class ActorCriticDecoder(nn.Module):
     def init_weights(sequential, scales):
         [torch.nn.init.orthogonal_(module.weight, gain=scales[idx]) for idx, module in
          enumerate(mod for mod in sequential if isinstance(mod, nn.Linear))]
-    
-    def define_student_temp(self):
-        num_obs = 45  #45
-        loaded_dict = torch.load('/home/ysc/gym/ours/teacher_student/lite3_ts_isaac-main/logs/rough_lite3/Nov09_13-57-19_/model_25000.pt')
-        
-        
         
 
     def reset(self, dones=None):

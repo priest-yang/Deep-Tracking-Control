@@ -258,43 +258,6 @@ class OnPolicyRunner:
         loaded_dict = torch.load(path)
         self.alg.actor_critic.load_state_dict(loaded_dict['model_state_dict'])
 
-        #temp to delete:
-        # self.alg.actor_critic.define_student_temp()
-        # self.alg.actor_critic.actor_student = self.alg.actor_critic.actor_body
-
-        #load student net to speed the training process
-        # loaded_dict_temp = torch.load('/home/ysc/gym/ours/teacher_student/lite3_ts_isaac-main/logs/rough_lite3/Nov14_11-39-25_/model_63800.pt')
-        # temp_actor_critic = self.alg.actor_critic
-        # temp_actor_critic.load_state_dict(loaded_dict_temp['model_state_dict'])
-        # self.alg.actor_critic.pri_decoder = temp_actor_critic.pri_decoder
-        # self.alg.actor_critic.ga_encoder = temp_actor_critic.ga_encoder
-        # self.alg.actor_critic.gb_encoder = temp_actor_critic.gb_encoder
-        # self.alg.actor_critic.ga_decoder = temp_actor_critic.ga_decoder
-        # self.alg.actor_critic.ter_decoder = temp_actor_critic.ter_decoder
-        # self.alg.actor_critic.actor_student = temp_actor_critic.actor_student
-        # self.alg.actor_critic.memory_a = temp_actor_critic.memory_a
-
-        # for m in self.alg.actor_critic.memory_a.modules():
-        #     if isinstance(m, (torch.nn.Linear, torch.nn.Conv1d, torch.nn.Conv2d)):
-        #         torch.nn.init.xavier_uniform_(m.weight)
-        # for m in self.alg.actor_critic.ga_encoder.modules():
-        #     if isinstance(m, (torch.nn.Linear, torch.nn.Conv1d, torch.nn.Conv2d)):
-        #         torch.nn.init.xavier_uniform_(m.weight)
-        # for m in self.alg.actor_critic.gb_encoder.modules():
-        #     if isinstance(m, (torch.nn.Linear, torch.nn.Conv1d, torch.nn.Conv2d)):
-        #         torch.nn.init.xavier_uniform_(m.weight)
-        # for m in self.alg.actor_critic.ga_decoder.modules():
-        #     if isinstance(m, (torch.nn.Linear, torch.nn.Conv1d, torch.nn.Conv2d)):
-        #         torch.nn.init.xavier_uniform_(m.weight)
-        # for m in self.alg.actor_critic.ter_decoder.modules():
-        #     if isinstance(m, (torch.nn.Linear, torch.nn.Conv1d, torch.nn.Conv2d)):
-        #         torch.nn.init.xavier_uniform_(m.weight)
-        # for m in self.alg.actor_critic.actor_student.modules():
-        #     if isinstance(m, (torch.nn.Linear, torch.nn.Conv1d, torch.nn.Conv2d)):
-        #         torch.nn.init.xavier_uniform_(m.weight)
-        # self.alg.init_student_optimizer()
-        #TEMP TO delete
-
         if load_optimizer:
             self.alg.optimizer.load_state_dict(loaded_dict['optimizer_state_dict'])
         self.current_learning_iteration = loaded_dict['iter']
