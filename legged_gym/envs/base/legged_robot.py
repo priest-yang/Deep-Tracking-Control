@@ -240,7 +240,7 @@ class LeggedRobot(BaseTask):
             dis_to_nominal = torch.norm(footholds_repeated_envs[:, :, :, :-1] - heights_world_repeated4[:, :, :, :-1], dim=-1)            
             # dis_to_nominal: [num_envs, num_points, 4]
             # clip the dis with filling dis > 0.1 with 1.0, these points will be filtered
-            dis_to_nominal = torch.where(dis_to_nominal < 0.1, dis_to_nominal, torch.tensor(10.0, dtype=torch.float, device=self.device) )
+            dis_to_nominal = torch.where(dis_to_nominal < 0.16, dis_to_nominal, torch.tensor(10.0, dtype=torch.float, device=self.device) )
             
             #! for debug & visualize
             self.nominal_footholds_indice = dis_to_nominal.min(dim=1)[1]
@@ -392,6 +392,10 @@ class LeggedRobot(BaseTask):
         # send timeout info to the algorithm
         if self.cfg.env.send_timeouts:
             self.extras["time_outs"] = self.time_out_buf
+            
+        #! added by shaoze
+        self.contact_filt[env_ids] = False
+        self.last_contacts[env_ids] = False
     
     def compute_reward(self):
         """ Compute rewards
@@ -676,6 +680,12 @@ class LeggedRobot(BaseTask):
         else :
             self.forces = torch.zeros((self.num_envs, self.num_bodies, 3), device=self.device, dtype=torch.float)
             self.force_positions = self.rb_positions.clone()
+            
+        #! added by shaoze
+        contact = self.contact_forces[:, self.feet_indices, 2] > 1.
+        self.contact_filt = torch.logical_or(contact, self.last_contacts) 
+        self.last_contacts = contact
+        
 
     def _resample_commands(self, env_ids):
         """ Randommly select commands of some environments
@@ -917,12 +927,6 @@ class LeggedRobot(BaseTask):
         self.last_scale_actions = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.last_scale_actions2 = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.last_dof_vel = torch.zeros_like(self.dof_vel)
-        # self.last_dof_vel1 = torch.zeros_like(self.dof_vel)
-        # self.last_dof_vel2 = torch.zeros_like(self.dof_vel)
-        # self.last_dof_vel3 = torch.zeros_like(self.dof_vel)
-        # self.last_dof_pos1 = torch.zeros_like(self.dof_pos)
-        # self.last_dof_pos2 = torch.zeros_like(self.dof_pos)
-        # self.last_dof_pos3 = torch.zeros_like(self.dof_pos)
         self.last_root_vel = torch.zeros_like(self.root_states[:, 7:13])
         self.last_foot_velocities = torch.zeros_like(self.foot_velocities)
         self.commands = torch.zeros(self.num_envs, self.cfg.commands.num_commands, dtype=torch.float, device=self.device, requires_grad=False) # x vel, y vel, yaw vel, heading
@@ -933,11 +937,10 @@ class LeggedRobot(BaseTask):
 
         #! changed by wz
         self.base_lin_vel_last = torch.zeros_like(self.base_lin_vel)
-
+        
         self.base_ang_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         #! changed by wz
         self.base_ang_vel_last = torch.zeros_like(self.base_ang_vel)
-
 
         self.last_base_ang_vel = torch.zeros_like(self.base_ang_vel)
         self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
@@ -956,6 +959,10 @@ class LeggedRobot(BaseTask):
         
         self.height_noise_offset = torch.zeros(self.num_envs, 693, device=self.device, requires_grad=False)
 
+        #! added by shaoze
+        self.last_contacts = torch.zeros(self.num_envs, len(self.feet_indices), dtype=torch.bool, device=self.device, requires_grad=False)
+        self.contact_filt = torch.zeros(self.num_envs, len(self.feet_indices), dtype=torch.bool, device=self.device, requires_grad=False)
+        
         # test camera
         # self.sensor_tensor_dict = defaultdict(list)
         # self.forward_depth_resize_transform = T.Resize(
@@ -1484,7 +1491,6 @@ class LeggedRobot(BaseTask):
                 sphere_pose = gymapi.Transform(gymapi.Vec3(x, y, z), r=None)
                 gymutil.draw_lines(foothold_optimal_sphere_geom, self.gym, self.viewer, self.envs[i], sphere_pose)
             
-            
 
         #! shaoze
         i = self.lookat_id
@@ -1731,6 +1737,13 @@ class LeggedRobot(BaseTask):
     def _reward_tracking_optimal_footholds(self):
         dis = self.foot_positions[:, :, :-1] - self.optimal_footholds_world[:, :, :-1]
         dis = torch.norm(dis, dim = -1)
+        contact = self.contact_filt.float() # * 2 - 1.0, # 0:4
+        epsilon = 0.8
+        reward_per_foot = -torch.log(epsilon + dis)
+        reward_filt = torch.where(contact == 1, reward_per_foot, torch.tensor(0., dtype = torch.float32, device=self.device))
+        reward_sum = torch.sum(reward_filt, dim = -1)
+        
+        return reward_sum
         
         
 

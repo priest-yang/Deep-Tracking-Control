@@ -69,8 +69,6 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         class scales( LeggedRobotCfg.rewards.scales ):
             torques = -0.000001
             dof_pos_limits = -10.0
-            
-
 
             #######################################
             #! train first
@@ -102,6 +100,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             # smooth = -0.015 / 10
             # feet_air_time = 1.0
             #######################################
+            tracking_optimal_footholds = 0.08
 
 
 class Lite3DTCCfgPPO( LeggedRobotCfgPPO ):
