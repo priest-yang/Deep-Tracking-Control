@@ -2,4 +2,4 @@ from .helpers import class_to_dict, get_load_path, get_args, export_policy_as_ji
 from .task_registry import task_registry
 from .logger import Logger
 from .math import *
-from .terrain_old import Terrain
+from .terrain import Terrain
