@@ -85,7 +85,7 @@ class BaseTask():
             self.gym.subscribe_viewer_keyboard_event(
                 self.viewer, gymapi.KEY_E, "right_turn")
             self.gym.subscribe_viewer_keyboard_event(
-                self.viewer, gymapi.KEY_X, "reset")
+                self.viewer, gymapi.KEY_R, "reset")
             
             # prev_id
             self.gym.subscribe_viewer_keyboard_event(
@@ -169,7 +169,8 @@ class BaseTask():
                     if evt.action == "right_turn" and evt.value > 0:
                         self.commands[self.lookat_id, 2] -= 0.2
                     if evt.action == "reset" and evt.value > 0:
-                        self.commands[self.lookat_id, 0:3] = torch.zeros(3, device=self.device)
+                        self.reset_idx(torch.tensor([self.lookat_id], device=self.device))
+                        # self.commands[self.lookat_id, 0:3] = torch.zeros(3, device=self.device)
                 if evt.action == "free_cam" and evt.value > 0:
                     self.free_cam = not self.free_cam
                     if self.free_cam:

@@ -16,6 +16,55 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         play_teacher = True
         num_lidar = 3200
         num_lidar_history = 5
+        
+    class terrain:
+        mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
+        # mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
+        horizontal_scale = 0.1 # 0.05 # [m] ->0.05
+        vertical_scale = 0.005 # [m]
+        border_size = 20 # [m]
+        #! changed by wz
+        # border_size = 0
+        
+        curriculum = True
+        static_friction = 1.0
+        dynamic_friction = 1.0
+        restitution = 0.
+        measure_heights = True
+        #! DTC
+        measured_points_x = [-0.8, -0.75, -0.7, -0.65, -0.6, -0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0., 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
+        measured_points_y = [-0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0., 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+        num_height_points = 33 * 21
+        measured_x_dim = 33
+        measured_y_dim = 21
+        
+        selected = False # select a unique terrain type and pass all arguments
+        terrain_kwargs = None # Dict of arguments for selected terrain
+        #! train first
+        max_init_terrain_level = 5 # starting curriculum state
+        # #! train after
+        # max_init_terrain_level = 9 # starting curriculum state
+        
+        # terrain_length = 8.
+        # terrain_width = 8.
+        #! changed by shaoze
+        # max_init_terrain_level = 0
+        terrain_length = 8.
+        terrain_width = 8.
+        num_rows= 10 # number of terrain rows (levels)
+        num_cols = 10 # number of terrain cols (types)
+        #! changed by wz
+        # num_rows= 3 # number of terrain rows (levels)
+        # num_cols = 4 # number of terrain cols (types)
+        # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
+        #! changed by shaoze
+        terrain_proportions = [0.1, 0.1, .1, .1, .3, .3, .0]
+        
+        # terrain_proportions = [0, 0, .5,.5, 0]
+        
+        # trimesh only:
+        slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces
+
 
 
     class init_state( LeggedRobotCfg.init_state ):
@@ -76,8 +125,6 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             #! train after
             # feet_air_time = 1.0
             #######################################
-            
-
 
             #######################################
             # #!step 2: unlock abilitity(seems impossible 0.23cm std:0.62 level:6.07) (wz_unbelievable)

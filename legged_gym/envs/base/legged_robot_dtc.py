@@ -218,13 +218,14 @@ class LeggedRobotDTC(LeggedRobot):
     def check_termination(self):
         """ Check if environments need to be reset
         """
-        self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 100., dim=1)
+        # self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 100., dim=1)
+        
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
-        self.reset_buf |= self.time_out_buf
+        self.reset_buf = self.time_out_buf
         # self.reset_buf |= (self.projected_gravity[:,2] > -0.2) 
 
         #! stand up
-        # self.reset_buf |= (self.projected_gravity[:,2] > 0.2)  
+        self.reset_buf |= (self.projected_gravity[:,2] > 0.2)  
         #! X30
         # self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:, 55:132], dim=1)) < 0.25)
         #! lite3
@@ -273,6 +274,34 @@ class LeggedRobotDTC(LeggedRobot):
             # print('obs_buf',self.obs_buf)
             self.obs_buf += (2 * torch.rand_like(self.obs_buf) - 1) * self.noise_scale_vec[:53]
             # print('obs_buf_after',self.obs_buf)
+            
+            
+    def _reset_root_states(self, env_ids):
+        """ Resets ROOT states position and velocities of selected environmments
+            Sets base position based on the curriculum
+            Selects randomized base velocities within -0.5:0.5 [m/s, rad/s]
+        Args:
+            env_ids (List[int]): Environemnt ids
+        """
+        # base position
+        if self.custom_origins:
+            # self.base_init_state[2]=torch_rand_float(self.cfg.init_state.pos_z_range[0], self.cfg.init_state.pos_z_range[1], (1,1),device=self.device)
+            self.root_states[env_ids] = self.base_init_state
+            self.root_states[env_ids, :3] += self.env_origins[env_ids]
+            self.root_states[env_ids, :2] += torch_rand_float(-.5, .5, (len(env_ids), 2), device=self.device) # xy position within 1m of the center
+        else:
+            self.root_states[env_ids] = self.base_init_state
+            self.root_states[env_ids, :3] += self.env_origins[env_ids]
+
+        # self.root_states[env_ids, 0] = self.root_states[env_ids, 0]-10
+    
+        # base velocities
+        self.root_states[env_ids, 7:13] = torch_rand_float(-0.5, 0.5, (len(env_ids), 6), device=self.device) # [7:10]: lin vel, [10:13]: ang vel
+        env_ids_int32 = env_ids.to(dtype=torch.int32)
+        self.gym.set_actor_root_state_tensor_indexed(self.sim,
+                                                     gymtorch.unwrap_tensor(self.root_states),
+                                                     gymtorch.unwrap_tensor(env_ids_int32), len(env_ids_int32))
+
             
     
 

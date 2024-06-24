@@ -10,7 +10,6 @@ from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Log
 
 from rsl_rl.env.wrappers.history_wrapper import HistoryWrapper
 
-
 import torch
 
 def play(args):
