@@ -107,7 +107,7 @@ class LeggedRobotCfg(BaseConfig):
         file = ""
         name = "legged_robot"  # actor name
         foot_name = "None" # name of the feet bodies, used to index body state and contact force tensors
-        hip_name = "HIP"
+        hip_name = "THIGH"#"HIP"
         penalize_contacts_on = []
         terminate_after_contacts_on = []
         disable_gravity = False

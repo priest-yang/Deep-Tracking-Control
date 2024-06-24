@@ -1223,7 +1223,7 @@ class LeggedRobot(BaseTask):
         feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
 
         # hip_names = ["FL_HipX_joint", "FR_HipX_joint", "HL_HipX_joint", "HR_HipX_joint"]
-        
+
         hip_names = [s for s in body_names if self.cfg.asset.hip_name in s]
         
         self.hip_indices = torch.zeros(len(hip_names), dtype=torch.long, device=self.device, requires_grad=False)
@@ -1355,7 +1355,7 @@ class LeggedRobot(BaseTask):
         
         self.penalised_contact_indices = torch.zeros(len(penalized_contact_names), dtype=torch.long, device=self.device, requires_grad=False)
         for i in range(len(penalized_contact_names)):
-            print(penalized_contact_names)
+            # print(penalized_contact_names)
             self.penalised_contact_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], penalized_contact_names[i])
 
         self.termination_contact_indices = torch.zeros(len(termination_contact_names), dtype=torch.long, device=self.device, requires_grad=False)
