@@ -64,7 +64,9 @@ class LeggedRobotCfg(BaseConfig):
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
         #! changed by shaoze
         terrain_proportions = [0.1, 0.1, .1, .1, .3, .3, .0]
-        # terrain_proportions = [0, 0, .5,.5, 0]
+        
+        terrain_proportions = [0, 0, .5,.5, 0]
+        
         # trimesh only:
         slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces
 

@@ -1,5 +1,6 @@
 import sys
 import os
+from time import sleep
 cur_path = os.getcwd()
 sys.path.append(os.path.join(cur_path, "../"))
 
@@ -49,6 +50,7 @@ def play(args):
         # actions=torch.zeros(env.num_envs,env.num_actions,dtype=torch.float32,device=env.device)
         # print("obs:",obs)
         obs,  rews, dones, infos = env.step(actions.detach())
+        sleep(0.02)
 
 if __name__ == '__main__':
     EXPORT_POLICY = False

@@ -205,13 +205,13 @@ class LeggedRobot(BaseTask):
         #! DTC foothold score computation based on terrain
         if self.cfg.terrain.measure_heights:
             #! foothold score based on "Perceptive Locomotion in Rough Terrain"
-            measured_heights_grid = self.measured_heights.view(self.num_envs, len(self.cfg.terrain.measured_points_x), len(self.cfg.terrain.measured_points_y))
+            measured_heights_grid = self.measured_heights.clone().view(self.num_envs, len(self.cfg.terrain.measured_points_x), len(self.cfg.terrain.measured_points_y))
             
             #! filter exceptional points
             exception_heights = (measured_heights_grid > 1) | (measured_heights_grid < -1)
             
-            measured_heights_grid.clamp_(min=-0.5, max=0.5)
-            d_x,d_y = torch.gradient(measured_heights_grid, dim=[1,2], spacing = 0.05) #! TODO: spacing should be changed when the resolution of the terrain is changed
+            measured_heights_grid = measured_heights_grid.clamp_(min=-0.5, max=0.5)
+            d_x,d_y = torch.gradient(measured_heights_grid, dim=[1,2], spacing = 0.05) #! Note: spacing should be changed when the resolution of the terrain is changed
             self.slope = torch.sqrt(d_x**2 + d_y**2)
             h_mean = torch.mean(measured_heights_grid, dim=(1,2))
             roughness = measured_heights_grid - h_mean.unsqueeze(1).unsqueeze(2).repeat(1, len(self.cfg.terrain.measured_points_x), len(self.cfg.terrain.measured_points_y))
@@ -219,8 +219,9 @@ class LeggedRobot(BaseTask):
             # roughness_score = torch.nn.functional.normalize(roughness, p=2, dim=(1,2))
             # slope_score = torch.nn.functional.normalize(self.slope, p=2, dim=(1,2))
             edge = torch.sqrt(torch.var(measured_heights_grid, dim=(1,2))).unsqueeze(1).unsqueeze(2).repeat(1, len(self.cfg.terrain.measured_points_x), len(self.cfg.terrain.measured_points_y))
-
-            lambda_1, lambda_2, lambda_3 = 0.2, 0.5, 0.3
+            edge = edge.clamp_(min=0.0, max=0.3)
+            
+            lambda_1, lambda_2, lambda_3 = 0.2, 1, 0.3
             foothold_score = lambda_1 * edge + lambda_2 * self.slope + lambda_3 * roughness
             
             foothold_score = foothold_score.view(self.num_envs, -1)
@@ -306,9 +307,9 @@ class LeggedRobot(BaseTask):
     def check_termination(self):
         """ Check if environments need to be reset
         """
-        # self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 100., dim=1)
+        self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 100., dim=1)
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
-        self.reset_buf = self.time_out_buf
+        self.reset_buf |= self.time_out_buf
         # self.reset_buf |= (self.projected_gravity[:,2] > -0.2) 
 
         #! stand up
@@ -1413,6 +1414,8 @@ class LeggedRobot(BaseTask):
             Default behaviour: draws height measurement points
         """
         self.gym.clear_lines(self.viewer)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
+
         
         # hip_sphere_geom = gymutil.WireframeSphereGeometry(radius=0.05, color=(1, 1, 0))
         
@@ -1546,8 +1549,7 @@ class LeggedRobot(BaseTask):
 
         points += self.terrain.cfg.border_size
         points = (points/self.terrain.cfg.horizontal_scale).long()
-        px = points[:, :, 0].view(-1
-                                  )
+        px = points[:, :, 0].view(-1)
         py = points[:, :, 1].view(-1)
         px = torch.clip(px, 0, self.height_samples.shape[0]-2)
         py = torch.clip(py, 0, self.height_samples.shape[1]-2)
