@@ -205,9 +205,11 @@ class LeggedRobot(BaseTask):
         #! DTC foothold score computation based on terrain
         if self.cfg.terrain.measure_heights:
             #! foothold score based on "Perceptive Locomotion in Rough Terrain"
-            measured_heights_grid = self.measured_heights.clone().view(self.num_envs, len(self.cfg.terrain.measured_points_x), len(self.cfg.terrain.measured_points_y))
+
+            measure_height_to_base = self.measured_heights - self.base_pos[:, 2].unsqueeze(1).repeat(1, len(self.cfg.terrain.measured_points_x)*len(self.cfg.terrain.measured_points_y))
+            measured_heights_grid = measure_height_to_base.clone().view(self.num_envs, len(self.cfg.terrain.measured_points_x), len(self.cfg.terrain.measured_points_y))
             
-            #! filter exceptional points
+            #! filter exceptional points (compared to root)
             exception_heights = (measured_heights_grid > 1) | (measured_heights_grid < -1)
             
             measured_heights_grid = measured_heights_grid.clamp_(min=-0.5, max=0.5)
@@ -227,7 +229,7 @@ class LeggedRobot(BaseTask):
             foothold_score = foothold_score.view(self.num_envs, -1)
             foothold_score = torch.where(foothold_score < 0.1, foothold_score, torch.tensor(10.0, dtype=torch.float, device=self.device) )
             
-            # take distance to nomimal foothold
+            # take distance to nominal foothold
             # breakpoint()
             height_points_flattened = self.height_points.flatten(end_dim = -2)
             quat_flattened = self.base_quat.repeat(1, self.measured_heights.shape[1]).flatten()
