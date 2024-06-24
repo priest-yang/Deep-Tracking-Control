@@ -282,8 +282,6 @@ class LeggedRobot(BaseTask):
                 batch_indices = torch.arange(optimal_indices.size(0)).unsqueeze(-1).expand_as(optimal_indices)
                 self.optimal_footholds_world = self.heights_world[batch_indices, optimal_indices]
 
-            
-            
         ###########################################################################
 
         # compute observations, rewards, resets, ...
@@ -316,8 +314,6 @@ class LeggedRobot(BaseTask):
 
         #! stand up
         # self.reset_buf |= (self.projected_gravity[:,2] > 0.2)  
-
-
         #! X30
         # self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:, 55:132], dim=1)) < 0.25)
         #! lite3

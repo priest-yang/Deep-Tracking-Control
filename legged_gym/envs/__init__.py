@@ -9,7 +9,7 @@ from .x30.x30_rough_config import X30RoughCfg, X30RoughCfgPPO
 
 from legged_gym.utils.task_registry import task_registry
 
-from .lite3.lite3_dtc import Lite3DTCCfgPPO, Lite3DTCCfg
+from .lite3.lite3_dtc_config import Lite3DTCCfgPPO, Lite3DTCCfg
 
 task_registry.register( "lite3_rough", LeggedRobot, Lite3RoughCfg(), Lite3RoughCfgPPO() )
 task_registry.register( "x30_rough", LeggedRobot, X30RoughCfg(), X30RoughCfgPPO() )
