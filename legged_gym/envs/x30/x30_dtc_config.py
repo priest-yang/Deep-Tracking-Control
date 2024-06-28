@@ -98,6 +98,8 @@ class X30DTCCfg( LeggedRobotCfg ):
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
         flip_visual_attachments = False
 
+
+
   
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.95
@@ -106,16 +108,27 @@ class X30DTCCfg( LeggedRobotCfg ):
             torques = -0.000001#-0.0002
             dof_pos_limits = -10.0
 
-class X30RoughCfgPPO( LeggedRobotCfgPPO ):
+            #######################################
+            #!step 3: try from 0.23cm std:0.62 level:6.10 (wz_unbelievable_2 !!!has been tested)
+            # torques = -0.000001
+            # dof_pos_limits = -10.0
+            # ang_vel_xy = - 0.05 / 10
+            # lin_vel_z = - 2.0 / 10
+            # smooth = -0.015 / 10
+            # feet_air_time = 1.0
+            #######################################
+            tracking_optimal_footholds = 0.08
+
+class X30DTCCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'rough_X30'
+        experiment_name = 'X30_dtc'
         max_iterations = 30000
 
         resume =  True
-        load_run = '/home/wt/deeprobotics/dr_gym_vae/logs/rough_X30/May22_11-36-13_'
+        # load_run = '/home/wt/deeprobotics/dr_gym_vae/logs/rough_X30/May22_11-36-13_'
         checkpoint = -1#2600#8000#'7600' # -1 = last saved model        
 
    
