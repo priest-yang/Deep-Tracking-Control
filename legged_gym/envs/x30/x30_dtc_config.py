@@ -155,10 +155,10 @@ class X30DTCCfgPPO( LeggedRobotCfgPPO ):
         entropy_coef = 0.01
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'X30_dtc'
+        experiment_name = 'x30_dtc'
         max_iterations = 30000
 
-        resume =  True
+        # resume =  True
         # load_run = '/home/wt/deeprobotics/dr_gym_vae/logs/rough_X30/May22_11-36-13_'
         checkpoint = -1 #2600#8000#'7600' # -1 = last saved model        
 

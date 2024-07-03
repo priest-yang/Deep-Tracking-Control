@@ -1128,29 +1128,31 @@ class LeggedRobot(BaseTask):
         self.sensor_handles = []
         def str_to_bit(s):
             return int(s.replace(' ', ''), 2)
+        
+        collision_filter = self.cfg.init_state.collision_filter
         #! lite3
-        collision_filter = {
-            'base': str_to_bit('1000 1000 1000 0000'),
-            'fl_hip': str_to_bit('1100 0000 0000 0000'),
-            'fl_thigh': str_to_bit('1110 0000 0000 0000'),
-            'fl_shank': str_to_bit('0011 0000 0000 0000'),
-            'fl_foot': str_to_bit('0001 0000 0000 0000'),
+        # collision_filter = {
+        #     'base': str_to_bit('1000 1000 1000 0000'),
+        #     'fl_hip': str_to_bit('1100 0000 0000 0000'),
+        #     'fl_thigh': str_to_bit('1110 0000 0000 0000'),
+        #     'fl_shank': str_to_bit('0011 0000 0000 0000'),
+        #     'fl_foot': str_to_bit('0001 0000 0000 0000'),
 
-            'fr_hip': str_to_bit('1000 0100 0000 0000'),
-            'fr_thigh': str_to_bit('1000 0110 0000 0000'),
-            'fr_shank': str_to_bit('0000 0011 0000 0000'),
-            'fr_foot': str_to_bit('0000 0001 0000 0000'),
+        #     'fr_hip': str_to_bit('1000 0100 0000 0000'),
+        #     'fr_thigh': str_to_bit('1000 0110 0000 0000'),
+        #     'fr_shank': str_to_bit('0000 0011 0000 0000'),
+        #     'fr_foot': str_to_bit('0000 0001 0000 0000'),
 
-            'hl_hip': str_to_bit('1000 0000 0100 0000'), 
-            'hl_thigh': str_to_bit('1000 0000 0110 0000'),
-            'hl_shank': str_to_bit('0000 0000 0011 0000'),
-            'hl_foot': str_to_bit('0000 0000 0001 0000'),
+        #     'hl_hip': str_to_bit('1000 0000 0100 0000'), 
+        #     'hl_thigh': str_to_bit('1000 0000 0110 0000'),
+        #     'hl_shank': str_to_bit('0000 0000 0011 0000'),
+        #     'hl_foot': str_to_bit('0000 0000 0001 0000'),
 
-            'hr_hip': str_to_bit('1000 0000 0000 0100'),
-            'hr_thigh': str_to_bit('1000 0000 0000 0110'),
-            'hr_shank': str_to_bit('0000 0000 0000 0011'),
-            'hr_foot': str_to_bit('0000 0000 0000 0001'),
-        }        
+        #     'hr_hip': str_to_bit('1000 0000 0000 0100'),
+        #     'hr_thigh': str_to_bit('1000 0000 0000 0110'),
+        #     'hr_shank': str_to_bit('0000 0000 0000 0011'),
+        #     'hr_foot': str_to_bit('0000 0000 0000 0001'),
+        # }        
 
         #! x30fff
         # collision_filter = {
