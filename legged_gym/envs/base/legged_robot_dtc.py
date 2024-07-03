@@ -303,7 +303,144 @@ class LeggedRobotDTC(LeggedRobot):
                                                      gymtorch.unwrap_tensor(env_ids_int32), len(env_ids_int32))
 
             
-    
+    def _create_envs(self):
+        """ Creates environments:
+             1. loads the robot URDF/MJCF asset,
+             2. For each environment
+                2.1 creates the environment, 
+                2.2 calls DOF and Rigid shape properties callbacks,
+                2.3 create actor with these properties and add them to the env
+             3. Store indices of different bodies of the robot
+        """
+        asset_path = self.cfg.asset.file.format(LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
+        asset_root = os.path.dirname(asset_path)
+        asset_file = os.path.basename(asset_path)
+
+        asset_options = gymapi.AssetOptions()
+        asset_options.default_dof_drive_mode = self.cfg.asset.default_dof_drive_mode
+        asset_options.collapse_fixed_joints = self.cfg.asset.collapse_fixed_joints
+        asset_options.replace_cylinder_with_capsule = self.cfg.asset.replace_cylinder_with_capsule
+        asset_options.flip_visual_attachments = self.cfg.asset.flip_visual_attachments
+        asset_options.fix_base_link = self.cfg.asset.fix_base_link
+        asset_options.density = self.cfg.asset.density
+        asset_options.angular_damping = self.cfg.asset.angular_damping
+        asset_options.linear_damping = self.cfg.asset.linear_damping
+        asset_options.max_angular_velocity = self.cfg.asset.max_angular_velocity
+        asset_options.max_linear_velocity = self.cfg.asset.max_linear_velocity
+        asset_options.armature = self.cfg.asset.armature
+        asset_options.thickness = self.cfg.asset.thickness
+        asset_options.disable_gravity = self.cfg.asset.disable_gravity
+
+        robot_asset = self.gym.load_asset(self.sim, asset_root, asset_file, asset_options)
+        self.num_dof = self.gym.get_asset_dof_count(robot_asset)
+        self.num_bodies = self.gym.get_asset_rigid_body_count(robot_asset)
+        dof_props_asset = self.gym.get_asset_dof_properties(robot_asset)
+        rigid_shape_props_asset = self.gym.get_asset_rigid_shape_properties(robot_asset)
+
+        self.default_friction = rigid_shape_props_asset[1].friction
+        self.default_restitution = rigid_shape_props_asset[1].restitution
+        # self.default_restitution = 1.
+        self._init_custom_buffers__()
+
+        # save body names from the asset
+        body_names = self.gym.get_asset_rigid_body_names(robot_asset)
+        self.dof_names = self.gym.get_asset_dof_names(robot_asset)
+        self.num_bodies = len(body_names)
+        self.num_dofs = len(self.dof_names)
+        feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
+
+        # hip_names = ["FL_HipX_joint", "FR_HipX_joint", "HL_HipX_joint", "HR_HipX_joint"]
+
+        hip_names = [s for s in body_names if self.cfg.asset.hip_name in s]
+        
+        self.hip_indices = torch.zeros(len(hip_names), dtype=torch.long, device=self.device, requires_grad=False)
+        
+        
+        for i, name in enumerate(hip_names):
+            self.hip_indices[i] = body_names.index(name)
+        
+
+        penalized_contact_names = []
+        for name in self.cfg.asset.penalize_contacts_on:
+            penalized_contact_names.extend([s for s in body_names if name in s])
+        termination_contact_names = []
+        for name in self.cfg.asset.terminate_after_contacts_on:
+            termination_contact_names.extend([s for s in body_names if name in s])
+        
+        collision_contact_names = []
+        for name in self.cfg.asset.collision_state:
+            collision_contact_names.extend([s for s in body_names if name in s])
+
+        base_init_state_list = self.cfg.init_state.pos + self.cfg.init_state.rot + self.cfg.init_state.lin_vel + self.cfg.init_state.ang_vel
+        self.base_init_state = to_torch(base_init_state_list, device=self.device, requires_grad=False)
+        start_pose = gymapi.Transform()
+        start_pose.p = gymapi.Vec3(*self.base_init_state[:3])
+
+        self._get_env_origins()
+        env_lower = gymapi.Vec3(0., 0., 0.)
+        env_upper = gymapi.Vec3(0., 0., 0.)
+        self.actor_handles = []
+        self.envs = []
+        # camera test
+        self.sensor_handles = []
+        def str_to_bit(s):
+            return int(s.replace(' ', ''), 2)
+        
+        collision_filter = self.cfg.init_state.collision_filter
+
+
+        for i in range(self.num_envs):
+            # create env instance
+            env_handle = self.gym.create_env(self.sim, env_lower, env_upper, int(np.sqrt(self.num_envs)))
+            pos = self.env_origins[i].clone()
+            pos[:2] += torch_rand_float(-1., 1., (2,1), device=self.device).squeeze(1)
+            start_pose.p = gymapi.Vec3(*pos)
+                
+            rigid_shape_props = self._process_rigid_shape_props(rigid_shape_props_asset, i)
+            # print(rigid_shape_props)
+            for shape_id in range(len(rigid_shape_props)):
+                rigid_shape_props[shape_id].filter = list(collision_filter.values())[shape_id]
+
+            self.gym.set_asset_rigid_shape_properties(robot_asset, rigid_shape_props)
+            actor_handle = self.gym.create_actor(env_handle, robot_asset, start_pose, self.cfg.asset.name, i, self.cfg.asset.self_collisions, 0)
+            
+            rsp = self.gym.get_actor_rigid_shape_properties(env_handle, actor_handle)
+            for shape_id in range(len(rigid_shape_props)):
+                rsp[shape_id].filter = list(collision_filter.values())[shape_id]
+            self.gym.set_actor_rigid_shape_properties(env_handle, actor_handle, rsp)
+
+            dof_props = self._process_dof_props(dof_props_asset, i)
+            self.gym.set_actor_dof_properties(env_handle, actor_handle, dof_props)
+            body_props = self.gym.get_actor_rigid_body_properties(env_handle, actor_handle)
+            body_props = self._process_rigid_body_props(body_props, i)
+            self.gym.set_actor_rigid_body_properties(env_handle, actor_handle, body_props, recomputeInertia=True)
+            #temp
+
+            self.envs.append(env_handle)
+            self.actor_handles.append(actor_handle)
+
+            #camera test
+            # sensor_handle_dict = self._create_sensors(env_handle, actor_handle)
+            # self.sensor_handles.append(sensor_handle_dict)
+
+
+        self.feet_indices = torch.zeros(len(feet_names), dtype=torch.long, device=self.device, requires_grad=False)
+        for i in range(len(feet_names)):
+            self.feet_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], feet_names[i])
+        
+        self.penalised_contact_indices = torch.zeros(len(penalized_contact_names), dtype=torch.long, device=self.device, requires_grad=False)
+        for i in range(len(penalized_contact_names)):
+            # print(penalized_contact_names)
+            self.penalised_contact_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], penalized_contact_names[i])
+
+        self.termination_contact_indices = torch.zeros(len(termination_contact_names), dtype=torch.long, device=self.device, requires_grad=False)
+        for i in range(len(termination_contact_names)):
+            self.termination_contact_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], termination_contact_names[i])
+        
+        self.collision_contact_indices = torch.zeros(len(collision_contact_names), dtype=torch.long, device=self.device, requires_grad=False)
+        for i in range(len(collision_contact_names)):
+            self.collision_contact_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], collision_contact_names[i])
+
 
     def _draw_debug_vis(self):
         """ Draws visualizations for dubugging (slows down simulation a lot).

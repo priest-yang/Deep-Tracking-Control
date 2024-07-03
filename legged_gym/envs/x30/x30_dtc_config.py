@@ -3,11 +3,10 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 class X30DTCCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env ):
         # num_envs = 4096
-        #! changed by wz
-        num_envs = 4096 * 3
-        num_observations = 45 # 45 + PMTG:13=58
+        num_envs = 8# 4096 * 3
+        num_observations = 45 + 8 # 45 + PMTG:13=58
         num_privileged_obs =  693 +3 +693 #212+384
-        num_obs_history = 45*5
+        num_obs_history = (45 + 8)*5
         num_observation_history = 5 # the length of history ,for lstm  =1
         debug_viz = False
 
@@ -51,7 +50,7 @@ class X30DTCCfg( LeggedRobotCfg ):
         num_cols = 10 # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
         #! changed by shaoze
-        terrain_proportions = [0.1, 0.1, .1, .1, .3, .3, .0]
+        terrain_proportions = [0.1, 0.1, .2, .2, .2, .2, .0]
         
         # terrain_proportions = [0, 0, .5,.5, 0]  #stairs up/down
          
@@ -77,6 +76,40 @@ class X30DTCCfg( LeggedRobotCfg ):
             'FR_Knee_joint': 1.43,  # [rad]
             'HR_Knee_joint': 1.43,    # [rad]
         }
+        
+        def str_to_bit(s):
+            return int(s.replace(' ', ''), 2)
+        
+        collision_filter = {
+            'base': str_to_bit('1000 1000 1000 1000'),
+            'fl_hip': str_to_bit('1100 0000 0000 0000'),
+            'fl_thigh': str_to_bit('1110 0000 0000 0000'),
+            'fl_shank': str_to_bit('1111 0000 0000 0000'),
+            'fl_shank1': str_to_bit('1111 0000 0000 0000'),
+            'fl_shank2': str_to_bit('1111 0000 0000 0000'),
+            'fl_foot': str_to_bit('1111 0000 0000 0000'),
+
+            'fr_hip': str_to_bit('1000 0100 0000 0000'),
+            'fr_thigh': str_to_bit('1000 0110 0000 0000'),
+            'fr_shank': str_to_bit('0000 1111 0000 0000'),
+            'fr_shank1': str_to_bit('0000 1111 0000 0000'),
+            'fr_shank2': str_to_bit('0000 1111 0000 0000'),
+            'fr_foot': str_to_bit('0000 1111 0000 0000'),
+
+            'hl_hip': str_to_bit('1000 0000 0100 0000'), 
+            'hl_thigh': str_to_bit('1000 0000 0110 0000'),
+            'hl_shank': str_to_bit('0000 0000 1111 0000'),
+            'hl_shank1': str_to_bit('0000 0000 1111 0000'),
+            'hl_shank2': str_to_bit('0000 0000 1111 0000'),
+            'hl_foot': str_to_bit('0000 0000 1111 0000'),
+
+            'hr_hip': str_to_bit('1000 0000 0000 0100'),
+            'hr_thigh': str_to_bit('1000 0000 0000 0110'),
+            'hr_shank': str_to_bit('0000 0000 0000 1111'),
+            'hr_shank1': str_to_bit('0000 0000 0000 1111'),
+            'hr_shank2': str_to_bit('0000 0000 0000 1111'),
+            'hr_foot': str_to_bit('0000 0000 0000 1111'),
+        }
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
@@ -95,10 +128,8 @@ class X30DTCCfg( LeggedRobotCfg ):
         penalize_contacts_on = ["THIGH", "SHANK"]
         collision_state = ["TORSO","THIGH", "SHANK"]
         terminate_after_contacts_on = ["TORSO"]
-        self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
+        self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
         flip_visual_attachments = False
-
-
 
   
     class rewards( LeggedRobotCfg.rewards ):
@@ -117,7 +148,7 @@ class X30DTCCfg( LeggedRobotCfg ):
             smooth = -0.015 / 10
             feet_air_time = 1.0
             #######################################
-            tracking_optimal_footholds = 0.08
+            tracking_optimal_footholds = 0.05
 
 class X30DTCCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):

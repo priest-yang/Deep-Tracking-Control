@@ -21,4 +21,4 @@ task_registry.register( "x30_rough", LeggedRobot, X30RoughCfg(), X30RoughCfgPPO(
 task_registry.register( "lite3_fast", LeggedRobot, Lite3FastCfg(), Lite3FastCfgPPO() )
 
 task_registry.register( "lite3_dtc", LeggedRobotDTC, Lite3DTCCfg(), Lite3DTCCfgPPO() )
-task_registry.register( "X30_dtc", LeggedRobotDTC, X30DTCCfg(), X30DTCCfgPPO() )
+task_registry.register( "x30_dtc", LeggedRobotDTC, X30DTCCfg(), X30DTCCfgPPO() )
