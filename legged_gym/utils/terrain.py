@@ -104,7 +104,7 @@ class Terrain:
         discrete_obstacles_height = 0.05 + difficulty * 0.15
         stone_distance = 0.05 if difficulty==0 else 0.1
         gap_size = .8 * difficulty 
-        pit_depth = .8 * difficulty 
+        pit_depth = .8 * difficulty
 
         
         if choice < self.proportions[0]:

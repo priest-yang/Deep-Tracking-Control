@@ -140,7 +140,6 @@ class X30DTCCfg( LeggedRobotCfg ):
             dof_pos_limits = -10.0
 
             #######################################
-            #!step 3: try from 0.23cm std:0.62 level:6.10 (wz_unbelievable_2 !!!has been tested)
             torques = -0.000001
             dof_pos_limits = -10.0
             ang_vel_xy = - 0.05 / 10

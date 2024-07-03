@@ -3,6 +3,8 @@ import os
 cur_path = os.getcwd()
 sys.path.append(os.path.join(cur_path, "../"))
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+
 from legged_gym.envs import *
 from legged_gym.utils import task_registry
 from legged_gym.utils.helpers import get_args
