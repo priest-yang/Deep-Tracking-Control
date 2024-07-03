@@ -504,6 +504,16 @@ class LeggedRobotDTC(LeggedRobot):
             sphere_pose = gymapi.Transform(gymapi.Vec3(*foothold), r=None)
             gymutil.draw_lines(command_hip, self.gym, self.viewer, self.envs[i], sphere_pose) 
 
+    def _reward_big_pitch(self):
+        rew = torch.sum( (torch.abs(self.projected_gravity[:, 0:1]) > 0.6), dim = 1)
+        return rew
+    
+    def _reward_feet_stumble(self):
+        # Penalize feet hitting vertical surfaces
+        return torch.any(torch.norm(self.contact_forces[:, self.feet_indices, :2], dim=2) >\
+             3 *torch.abs(self.contact_forces[:, self.feet_indices, 2]), dim=1)
+
+
     
     #! DTC tracking optimal footholds reward
     def _reward_tracking_optimal_footholds(self):

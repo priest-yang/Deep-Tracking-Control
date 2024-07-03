@@ -133,21 +133,37 @@ class X30DTCCfg( LeggedRobotCfg ):
 
   
     class rewards( LeggedRobotCfg.rewards ):
-        soft_dof_pos_limit = 0.95
-        base_height_target = 0.49
+        soft_dof_pos_limit = 0.99
+        base_height_target = 0.56
+        soft_torque_limit = 0.99
+        max_acc = 100.    
         class scales( LeggedRobotCfg.rewards.scales ):
             torques = -0.000001#-0.0002
             dof_pos_limits = -10.0
 
-            #######################################
-            torques = -0.000001
-            dof_pos_limits = -10.0
-            ang_vel_xy = - 0.05 / 10
-            lin_vel_z = - 2.0 / 10
-            smooth = -0.015 / 10
-            feet_air_time = 1.0
-            #######################################
-            tracking_optimal_footholds = 0.05
+            termination = -0.0
+            tracking_lin_vel = 3.
+            tracking_ang_vel = 0.5
+            lin_vel_z = -4.
+            ang_vel_xy = -0.2
+            orientation = -0.5
+            torques = -0.000000
+            dof_vel = -0.000001#-0.0002#-0.002
+            dof_acc = -2.5e-7*1.
+            base_height = -10.
+            feet_air_time =  2.
+            collision = -1.
+            feet_stumble = -3.
+            action_rate = -0.02
+            powerchange =  -0.01
+            pos_acc = -0.01
+            # foot_acc = -0.007
+            big_pitch= -10.
+            feet_contact_forces = -0.005
+
+            #! DTC
+            tracking_optimal_footholds = 0.08
+
 
 class X30DTCCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
