@@ -515,10 +515,13 @@ class LeggedRobotDTC(LeggedRobot):
 
     def _reward_base_height(self):
         # Penalize base height away from target
+        # ! do not use in terrain with slope
         base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:,  10 * 21: (33-10)*21], dim = 1)
         return torch.square(base_height - self.cfg.rewards.base_height_target)
 
-    
+    def _reward_body_higher_than_feet(self):
+        foot_to_body = torch.mean(self.foot_positions[:, :, 2], dim=-1) - self.root_states[:, 2]
+        return foot_to_body
     
     #! DTC tracking optimal footholds reward
     def _reward_tracking_optimal_footholds(self):
