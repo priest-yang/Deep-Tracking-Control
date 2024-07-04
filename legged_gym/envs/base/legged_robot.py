@@ -190,7 +190,7 @@ class LeggedRobot(BaseTask):
         #! lite3
         
         self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
-                                       self.measured_heights[:, 10 * 21: (33-10)*21], 
+                                       self.measured_heights[:, 13 * 21: (33-13)*21], 
                                        dim=1)) < 0.1) #! 55-132 changed according to terrain resolution
         
         self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
@@ -1525,20 +1525,6 @@ class LeggedRobot(BaseTask):
     #! added by wz
     def _reward_smooth(self):
         return torch.sum(torch.square(self.actions - 2*self.last_actions+self.last_actions_2), dim=1)
-    
-
-    # #! DTC 
-    # # tracking optimal footholds
-    # def _reward_tracking_optimal_footholds(self):
-    #     dis = self.foot_positions[:, :, :-1] - self.optimal_footholds_world[:, :, :-1]
-    #     dis = torch.norm(dis, dim = -1)
-    #     contact = self.contact_filt.float() # * 2 - 1.0, # 0:4
-    #     epsilon = 0.8
-    #     reward_per_foot = -torch.log(epsilon + dis)
-    #     reward_filt = torch.where(contact == 1, reward_per_foot, torch.tensor(0., dtype = torch.float32, device=self.device))
-    #     reward_sum = torch.sum(reward_filt, dim = -1)
-        
-    #     return reward_sum
         
         
 

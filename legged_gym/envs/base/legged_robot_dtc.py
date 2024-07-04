@@ -218,7 +218,7 @@ class LeggedRobotDTC(LeggedRobot):
     def check_termination(self):
         """ Check if environments need to be reset
         """
-        # self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 100., dim=1)
+        self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 100., dim=1)
         
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
         self.reset_buf = self.time_out_buf
@@ -234,9 +234,9 @@ class LeggedRobotDTC(LeggedRobot):
                                        self.measured_heights[:, 10 * 21: (33-10)*21], 
                                        dim=1)) < 0.1) #! 55-132 changed according to terrain resolution
         
-        self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
-                                       self.foot_positions[:, :, 2], 
-                                       dim=1)) < 0.1) 
+        # self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
+        #                                self.foot_positions[:, :, 2], 
+        #                                dim=1)) < 0.1) 
         
 
     def compute_observations(self):
@@ -513,7 +513,12 @@ class LeggedRobotDTC(LeggedRobot):
         return torch.any(torch.norm(self.contact_forces[:, self.feet_indices, :2], dim=2) >\
              3 *torch.abs(self.contact_forces[:, self.feet_indices, 2]), dim=1)
 
+    def _reward_base_height(self):
+        # Penalize base height away from target
+        base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:,  10 * 21: (33-10)*21], dim = 1)
+        return torch.square(base_height - self.cfg.rewards.base_height_target)
 
+    
     
     #! DTC tracking optimal footholds reward
     def _reward_tracking_optimal_footholds(self):

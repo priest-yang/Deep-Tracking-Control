@@ -125,10 +125,25 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         name = "Lite3"
         foot_name = "FOOT"
         
-        penalize_contacts_on = ["THIGH", "SHANK"]
+        penalize_contacts_on = ["TORSO", "THIGH", "SHANK"] #  ["THIGH", "SHANK"]
         collision_state = ["TORSO","THIGH", "SHANK"]
         terminate_after_contacts_on = ["TORSO"]
         self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
+        
+
+    class commands:
+        curriculum = False
+        max_curriculum = 1.
+        num_commands = 4 # default: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
+        resampling_time = 10. # time before command are changed[s]
+        heading_command = True # if true: compute ang vel command from heading error
+        class ranges:
+            # lin_vel_x = [-1.0, 1.0] # min max [m/s]
+            #! changed by wz
+            lin_vel_x = [-.75, .75] # min max [m/s]
+            lin_vel_y = [-.75, .75]   # min max [m/s]
+            ang_vel_yaw = [-.5, .5]    # min max [rad/s]
+            heading = [-3.14, 3.14]
     
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
@@ -154,6 +169,12 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             lin_vel_z = - 2.0 / 10
             smooth = -0.015 / 10
             feet_air_time = 1.0
+            
+            collision = -1.5
+            termination = -0.1
+            stand_still = -0.2
+            base_height = -20.0
+            
              #######################################
             
 
