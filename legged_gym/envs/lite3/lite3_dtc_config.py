@@ -142,11 +142,11 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             #! train first
             # feet_air_time = 0.0
             #! train after
-            # feet_air_time = 1.0
+            feet_air_time = 1.0
             #######################################
 
             #######################################
-            # #!step 2: unlock abilitity(seems impossible 0.23cm std:0.62 level:6.07) (wz_unbelievable)
+            # #!step 2: unlock abilitity(seems impossible 0.23cm std:0.62 level:6.07)
             torques = -0.000001
             dof_pos_limits = -10.0
             dof_acc = -2.5e-7 / 10
@@ -158,7 +158,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             
 
             #######################################
-            #!step 3: try from 0.23cm std:0.62 level:6.10 (wz_unbelievable_2 !!!has been tested)
+            #!step 3: try from 0.23cm std:0.62 level:6.10
             # torques = -0.000001
             # dof_pos_limits = -10.0
             # ang_vel_xy = - 0.05 / 10
