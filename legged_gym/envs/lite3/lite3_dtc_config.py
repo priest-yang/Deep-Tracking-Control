@@ -20,7 +20,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
     class terrain:
         mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
         # mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
-        horizontal_scale = 0.1 # 0.05 # [m] ->0.05
+        horizontal_scale = 0.05 # 0.05 # [m] ->0.05
         vertical_scale = 0.005 # [m]
         border_size = 20 # [m]
         #! changed by wz
@@ -45,10 +45,10 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         # #! train after
         # max_init_terrain_level = 9 # starting curriculum state
         # max_init_terrain_level = 0
-        terrain_length = 8.
-        terrain_width = 8.
-        num_rows= 10 # number of terrain rows (levels)
-        num_cols = 10 # number of terrain cols (types)
+        terrain_length = 4.
+        terrain_width = 4.
+        num_rows= 6 # number of terrain rows (levels)
+        num_cols = 8 # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
         #! changed by shaoze
         terrain_proportions = [0.1, 0.1, .1, .1, .3, .3, .0]
