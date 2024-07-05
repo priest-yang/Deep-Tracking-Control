@@ -27,6 +27,7 @@ def play(args):
 
     env_cfg.env.test = True
     env_cfg.env.play_teacher = True
+    env_cfg.env.play_commond = True
     
     # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
     env_cfg.terrain.terrain_proportions = [0., 0., .2, .2, .3, .3, .0]
@@ -54,7 +55,7 @@ def play(args):
         # actions=torch.zeros(env.num_envs,env.num_actions,dtype=torch.float32,device=env.device)
         # print("obs:",obs)
         obs,  rews, dones, infos = env.step(actions.detach())
-        sleep(0.01)
+        sleep(0.02)
 
 if __name__ == '__main__':
     EXPORT_POLICY = False

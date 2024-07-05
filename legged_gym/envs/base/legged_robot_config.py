@@ -32,43 +32,30 @@ class LeggedRobotCfg(BaseConfig):
         
         # measured_points_y = [-0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5]
         
-        #! added by shaoze
-
         measured_points_x = [-0.8, -0.75, -0.7, -0.65, -0.6, -0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0., 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
         measured_points_y = [-0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0., 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
         num_height_points = 33 * 21
         measured_x_dim = 33
         measured_y_dim = 21
         
-        
         # body_center_slice = [10 * 21: (33-10)*21] #[344-21, 345-21, 346-21, 347-21, 344, 345, 346, 347, 344+21, 345+21, 346+21, 347+21]
         
         selected = False # select a unique terrain type and pass all arguments
         terrain_kwargs = None # Dict of arguments for selected terrain
-        #! train first
         max_init_terrain_level = 5 # starting curriculum state
-        # #! train after
-        # max_init_terrain_level = 9 # starting curriculum state
-        
-        # terrain_length = 8.
-        # terrain_width = 8.
-        #! changed by shaoze
-        # max_init_terrain_level = 0
         terrain_length = 8.
         terrain_width = 8.
         num_rows= 10 # number of terrain rows (levels)
         num_cols = 10 # number of terrain cols (types)
-        #! changed by wz
-        # num_rows= 3 # number of terrain rows (levels)
-        # num_cols = 4 # number of terrain cols (types)
+        
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
-        #! changed by shaoze
         terrain_proportions = [0.1, 0.1, .1, .1, .3, .3, .0]
         
         terrain_proportions = [0, 0, .5,.5, 0]
         
         # trimesh only:
         slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces
+        measure_foot_clearance = False
 
 
         
@@ -109,7 +96,8 @@ class LeggedRobotCfg(BaseConfig):
         file = ""
         name = "legged_robot"  # actor name
         foot_name = "None" # name of the feet bodies, used to index body state and contact force tensors
-        hip_name = "THIGH"#"HIP"
+        hip_name = "HIP"
+        thigh_name = "THIGH"
         penalize_contacts_on = []
         terminate_after_contacts_on = []
         disable_gravity = False

@@ -20,7 +20,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
     class terrain:
         mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
         # mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
-        horizontal_scale = 0.05 # 0.05 # [m] ->0.05
+        horizontal_scale = 0.1 # 0.05 # [m] ->0.05
         vertical_scale = 0.005 # [m]
         border_size = 20 # [m]
         #! changed by wz
@@ -42,21 +42,19 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         terrain_kwargs = None # Dict of arguments for selected terrain
         #! train first
         max_init_terrain_level = 5 # starting curriculum state
-        # #! train after
-        # max_init_terrain_level = 9 # starting curriculum state
-        # max_init_terrain_level = 0
-        terrain_length = 4.
-        terrain_width = 4.
+        
+        terrain_length = 8.
+        terrain_width = 8.
         num_rows= 6 # number of terrain rows (levels)
-        num_cols = 8 # number of terrain cols (types)
+        num_cols = 6 # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
-        #! changed by shaoze
-        terrain_proportions = [0.1, 0.1, .1, .1, .3, .3, .0]
+        terrain_proportions = [0., 0., 0, 1, 0, 0, 0]
         
         # terrain_proportions = [0, 0, .5,.5, 0]  #stairs up/down
          
         # trimesh only:
         slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces
+        measure_foot_clearance = True
 
 
 
@@ -149,45 +147,40 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         soft_dof_pos_limit = 0.9
         # base_height_target = 0.32
         base_height_target = 0.34
+        max_acc = 100.    
         class scales( LeggedRobotCfg.rewards.scales ):
             torques = -0.000001
             dof_pos_limits = -10.0
 
-            #######################################
             #! train first
             # feet_air_time = 0.0
             #! train after
             feet_air_time = 1.0
             #######################################
-
-            #######################################
-            # #!step 2: unlock abilitity(seems impossible 0.23cm std:0.62 level:6.07)
             torques = -0.000001
             dof_pos_limits = -10.0
-            dof_acc = -2.5e-7 / 10
-            ang_vel_xy = - 0.05 / 10
-            lin_vel_z = - 2.0 / 10
-            smooth = -0.015 / 10
+            dof_acc = -2.5e-7 
+            ang_vel_xy = - 0.05 
+            lin_vel_z = - 2.0 
+            smooth = -0.015 
             feet_air_time = 1.0
             
             collision = -1.5
             termination = -0.1
-            stand_still = -0.2
+            # stand_still = -0.2
             base_height = 0.0 #! remove after robot can stand still
             body_higher_than_feet = 0.1
             
-             #######################################
+            #! added
+            action_rate = -0.02
+            foot_clearance = -0.02#-0.01
+            feet_slip = -0.05
+            hip_pos = -0.7
+            powerchange =  -0.01
+            pos_acc = -0.01
+            foot_acc = -0.007
             
-
-            #######################################
-            #!step 3: try from 0.23cm std:0.62 level:6.10
-            # torques = -0.000001
-            # dof_pos_limits = -10.0
-            # ang_vel_xy = - 0.05 / 10
-            # lin_vel_z = - 2.0 / 10
-            # smooth = -0.015 / 10
-            # feet_air_time = 1.0
-            #######################################
+            #! DTC
             tracking_optimal_footholds = 0.08
 
 

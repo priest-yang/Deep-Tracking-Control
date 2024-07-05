@@ -550,6 +550,9 @@ class LeggedRobot(BaseTask):
         else :
             self.forces = torch.zeros((self.num_envs, self.num_bodies, 3), device=self.device, dtype=torch.float)
             self.force_positions = self.rb_positions.clone()
+        
+        if self.cfg.terrain.measure_foot_clearance:
+            self.measured_foot_clearance = self._get_foot_clearance(torch.arange(self.num_envs, device=self.device))
             
         #! added by shaoze
         contact = self.contact_forces[:, self.feet_indices, 2] > 1.
@@ -822,7 +825,7 @@ class LeggedRobot(BaseTask):
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
         self.measured_heights = 0
-        self.measured_foot_clearance = 0
+        self.measured_foot_clearance = torch.zeros(self.num_envs, len(self.feet_indices), dtype=torch.float, device=self.device, requires_grad=False)
 
         self.forces = torch.zeros((self.num_envs, self.num_bodies, 3), device=self.device, dtype=torch.float)
         self.force_positions = self.rb_positions.clone()
@@ -1092,16 +1095,24 @@ class LeggedRobot(BaseTask):
         self.num_dofs = len(self.dof_names)
         feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
 
-        # hip_names = ["FL_HipX_joint", "FR_HipX_joint", "HL_HipX_joint", "HR_HipX_joint"]
-
-        hip_names = [s for s in body_names if self.cfg.asset.hip_name in s]
-        
+        breakpoint()
+        hip_names = ["FL_HipX_joint", "FR_HipX_joint", "HL_HipX_joint", "HR_HipX_joint"]
         self.hip_indices = torch.zeros(len(hip_names), dtype=torch.long, device=self.device, requires_grad=False)
-        
-        
         for i, name in enumerate(hip_names):
-            self.hip_indices[i] = body_names.index(name)
+            self.hip_indices[i] = self.dof_names.index(name)
+        breakpoint()
+            
+        # hip_names = [s for s in body_names if self.cfg.asset.hip_name in s]
+        thigh_names = [s for s in body_names if self.cfg.asset.thigh_name in s]
         
+        # self.hip_indices = torch.zeros(len(hip_names), dtype=torch.long, device=self.device, requires_grad=False)
+        self.thigh_indices = torch.zeros(len(thigh_names), dtype=torch.long, device=self.device, requires_grad=False)
+        
+        # for i, name in enumerate(hip_names):
+        #     self.hip_indices[i] = body_names.index(name)
+        
+        for i, name in enumerate(thigh_names):
+            self.thigh_indices[i] = body_names.index(name)
 
         penalized_contact_names = []
         for name in self.cfg.asset.penalize_contacts_on:
@@ -1130,61 +1141,6 @@ class LeggedRobot(BaseTask):
             return int(s.replace(' ', ''), 2)
         
         collision_filter = self.cfg.init_state.collision_filter
-        #! lite3
-        # collision_filter = {
-        #     'base': str_to_bit('1000 1000 1000 0000'),
-        #     'fl_hip': str_to_bit('1100 0000 0000 0000'),
-        #     'fl_thigh': str_to_bit('1110 0000 0000 0000'),
-        #     'fl_shank': str_to_bit('0011 0000 0000 0000'),
-        #     'fl_foot': str_to_bit('0001 0000 0000 0000'),
-
-        #     'fr_hip': str_to_bit('1000 0100 0000 0000'),
-        #     'fr_thigh': str_to_bit('1000 0110 0000 0000'),
-        #     'fr_shank': str_to_bit('0000 0011 0000 0000'),
-        #     'fr_foot': str_to_bit('0000 0001 0000 0000'),
-
-        #     'hl_hip': str_to_bit('1000 0000 0100 0000'), 
-        #     'hl_thigh': str_to_bit('1000 0000 0110 0000'),
-        #     'hl_shank': str_to_bit('0000 0000 0011 0000'),
-        #     'hl_foot': str_to_bit('0000 0000 0001 0000'),
-
-        #     'hr_hip': str_to_bit('1000 0000 0000 0100'),
-        #     'hr_thigh': str_to_bit('1000 0000 0000 0110'),
-        #     'hr_shank': str_to_bit('0000 0000 0000 0011'),
-        #     'hr_foot': str_to_bit('0000 0000 0000 0001'),
-        # }        
-
-        #! x30fff
-        # collision_filter = {
-        #     'base': str_to_bit('1000 1000 1000 1000'),
-        #     'fl_hip': str_to_bit('1100 0000 0000 0000'),
-        #     'fl_thigh': str_to_bit('1110 0000 0000 0000'),
-        #     'fl_shank': str_to_bit('1111 0000 0000 0000'),
-        #     'fl_shank1': str_to_bit('1111 0000 0000 0000'),
-        #     'fl_shank2': str_to_bit('1111 0000 0000 0000'),
-        #     'fl_foot': str_to_bit('1111 0000 0000 0000'),
-
-        #     'fr_hip': str_to_bit('1000 0100 0000 0000'),
-        #     'fr_thigh': str_to_bit('1000 0110 0000 0000'),
-        #     'fr_shank': str_to_bit('0000 1111 0000 0000'),
-        #     'fr_shank1': str_to_bit('0000 1111 0000 0000'),
-        #     'fr_shank2': str_to_bit('0000 1111 0000 0000'),
-        #     'fr_foot': str_to_bit('0000 1111 0000 0000'),
-
-        #     'hl_hip': str_to_bit('1000 0000 0100 0000'), 
-        #     'hl_thigh': str_to_bit('1000 0000 0110 0000'),
-        #     'hl_shank': str_to_bit('0000 0000 1111 0000'),
-        #     'hl_shank1': str_to_bit('0000 0000 1111 0000'),
-        #     'hl_shank2': str_to_bit('0000 0000 1111 0000'),
-        #     'hl_foot': str_to_bit('0000 0000 1111 0000'),
-
-        #     'hr_hip': str_to_bit('1000 0000 0000 0100'),
-        #     'hr_thigh': str_to_bit('1000 0000 0000 0110'),
-        #     'hr_shank': str_to_bit('0000 0000 0000 1111'),
-        #     'hr_shank1': str_to_bit('0000 0000 0000 1111'),
-        #     'hr_shank2': str_to_bit('0000 0000 0000 1111'),
-        #     'hr_foot': str_to_bit('0000 0000 0000 1111'),
-        # }
 
         for i in range(self.num_envs):
             # create env instance
@@ -1458,20 +1414,6 @@ class LeggedRobot(BaseTask):
         # Need to filter the contacts because the contact reporting of PhysX is unreliable on meshes
         contact = self.contact_forces[:, self.feet_indices, 2] > 1.
         contact_filt = torch.logical_or(contact, self.last_contacts) 
-        
-        #! added by wz
-        # contact_left_up = contact[:,0]
-        # contact_right_up = contact[:,1]
-        # contact_left_down = contact[:,2]
-        # contact_right_down = contact[:,3]
-        # contact_all = torch.logical_and(torch.logical_and(torch.logical_and(contact_left_up, contact_right_up),contact_left_down),contact_right_down)
-
-        # contact_left_up_last =  self.last_contacts[:,0]
-        # contact_right_up_last =  self.last_contacts[:,1]
-        # contact_left_down_last =  self.last_contacts[:,1]
-        # contact_right_down_last =  self.last_contacts[:,3]
-        # contact_all_last = torch.logical_and(torch.logical_and(torch.logical_and(contact_left_up_last, contact_right_up_last),contact_left_down_last),contact_right_down_last)
-
         contact_left_up_filt = torch.logical_or(contact[:,0],self.last_contacts[:,0])
         contact_right_up_filt = torch.logical_or(contact[:,1],self.last_contacts[:,1])
         contact_left_down_filt = torch.logical_or(contact[:,2],self.last_contacts[:,2])
@@ -1496,8 +1438,6 @@ class LeggedRobot(BaseTask):
         return rew_airTime
         # return rew_airTime_stand
         # return rew_airTime+rew_airTime_stand
-    
-    
     
     
     def _reward_stumble(self):
@@ -1526,8 +1466,98 @@ class LeggedRobot(BaseTask):
     def _reward_smooth(self):
         return torch.sum(torch.square(self.actions - 2*self.last_actions+self.last_actions_2), dim=1)
         
-        
+    def _get_foot_clearance(self, env_ids = None):
+        if env_ids is None:
+            env_ids = torch.arange(self.num_envs, device=self.device)
+        foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices,
+                              0:3].reshape((self.num_envs,len(self.feet_indices),3)) #  in world frame
+        points = foot_positions[env_ids] # shape = (num_envs, num_leg, 3)
+        points += self.cfg.terrain.border_size
+        points = (points / self.cfg.terrain.horizontal_scale).long()
+        px = points[:,:,0].view(-1)
+        py = points[:,:,1].view(-1)
+        px = torch.clip(px, 1, self.height_samples.shape[0] - 3)
+        py = torch.clip(py, 1, self.height_samples.shape[1] - 3)
+        heights1 = self.height_samples[px, py]
+        heights2 = self.height_samples[px + 1, py]
+        heights3 = self.height_samples[px, py + 1]
+        heights4 = self.height_samples[px + 2, py]
+        heights5 = self.height_samples[px, py + 2]
+        heights6 = self.height_samples[px + 1, py + 1]
+        heights7 = self.height_samples[px - 1, py]
+        heights8 = self.height_samples[px, py - 1]
+        heights9 = self.height_samples[px - 2, py]
+        heights10 = self.height_samples[px, py - 2]
+        heights_tensor = torch.stack((heights1, heights2, heights3, heights4, heights5, heights6, heights7, heights8, heights9, heights10), dim=0)
+        # heights = torch.max(heights1, heights2, heights3)
+        # heights = torch.max(heights, heights3).view(len(env_ids),-1) # shape = (num_envs, num_leg)
+        heights, _ = torch.max(heights_tensor, dim=0)
+        heights = heights.view(len(env_ids),-1)
 
+        delta_height =  foot_positions[env_ids,:,2]   - heights * self.cfg.terrain.vertical_scale
+        return delta_height.view(len(env_ids),-1)
+
+    def _reward_foot_clearance(self):
+        # Penalize foot clearance
+        reference_heights = 0
+        near_ground = self.measured_foot_clearance < 0.03#self.foot_positions[:, :, 2] - reference_heights < 0.03
+        # print(self.measured_foot_clearance)
+        # print('near', near_ground)
+        foot_velocities = torch.square(torch.norm(self.foot_velocities[:, :, 0:2], dim=2).view(self.num_envs, -1))
+        h_delta = torch.square(self.measured_foot_clearance - 0.1)
+        mask = torch.where((torch.abs(self.projected_gravity[:, 0]) > 0.2), 0., 1.)
+        stumb = torch.norm(self.contact_forces[:, self.feet_indices, :2], dim=2) >\
+             4 *torch.abs(self.contact_forces[:, self.feet_indices, 2])
+        self.stumb_buffer = self.stumb_buffer[1:] + [stumb.clone()]
+        # is_collision = torch.where(torch.sum(torch.norm(self.contact_forces[:, self.penalised_contact_indices, :], dim=-1) > 0.1,dim = 1) > 0, 1, 0) 
+        # print(is_collision.size())
+        flag = self.stumb_buffer[0] | self.stumb_buffer[1] | self.stumb_buffer[2] | self.stumb_buffer[3] | self.stumb_buffer[4]#| self.stumb_buffer[5] | self.stumb_buffer[6] | self.stumb_buffer[7] | self.stumb_buffer[8] | self.stumb_buffer[9]
+        rew_contact_vel = torch.sum(~flag * (self.measured_foot_clearance > 0.18), dim = 1)# + torch.sum(flag * (self.measured_foot_clearance > 0.37), dim = 1)
+        # print(flag)
+
+        return rew_contact_vel
+
+    def _reward_feet_slip(self):
+        contact = self.contact_forces[:, self.feet_indices, 2] > 1.
+        contact_filt = torch.logical_or(contact, self.last_contacts)
+        # self.last_contacts[:] = contact[:]
+        foot_velocities = torch.square(torch.norm(self.foot_velocities[:, :, 0:2], dim=2).view(self.num_envs, -1))
+        # mask = torch.where(torch.norm(self.commands[:, :2]) <= 0.2, 1., 1.)
+        mask2 = torch.where(self.commands[:, 0] > 0.4 , 0.4, 1.) 
+        rew_slip = torch.sum(contact_filt * foot_velocities, dim=1)
+        return rew_slip
+
+    def _reward_hip_pos(self):
+        breakpoint()
+        return torch.sum(torch.square(self.dof_pos[:, self.hip_indices]), dim=1)
+
+    def _reward_powerchange(self):
+        # Penalize power
+        target_v = self.commands[:,0].clone()
+        smooth_co = target_v.clip(min=1.0)
+        # return (torch.sum(torch.abs(self.torques)*torch.abs(self.dof_vel), dim=1)/(self.robot_mass * 9.815 * smooth_co))**2
+        return (torch.sum((self.torques*self.dof_vel).clip(min=0.0), dim=1)/(self.robot_mass * 9.815 * smooth_co))**2
+
+
+    def _reward_pos_acc(self):
+        result = [list(item) for item in itertools.product([-1, 1], repeat=3)]
+        acc_point = np.array(result) * [0.3, 0.2, 0.15]
+        self.acc_point = to_torch(acc_point, device=self.device).view(1, 8, 3).repeat(self.num_envs, 1, 1)
+        acc_point_vel = self.base_lin_vel.reshape(self.num_envs, 1, 3).repeat(1, 8, 1) + \
+                                        torch.cross(
+                                            self.base_ang_vel.reshape(self.num_envs, 1, 3).repeat(1, 8, 1),
+                                            self.acc_point)  
+        return  torch.sum(torch.square(torch.norm(acc_point_vel, dim=-1)), dim=1) 
+
+    def _reward_foot_acc(self):
+        # Penalize dof accelerations
+        # print(torch.norm( ((self.last_foot_velocities - self.foot_velocities) / self.dt) ,dim = -1))
+        contact = self.contact_forces[:, self.feet_indices, 2] > 1.
+        contact_filt = torch.logical_or(contact, self.last_contacts) 
+        mask = torch.where((self.terrain_levels > 5), 0.2, 1.)
+        return torch.sum((  mask.view(-1,1)* (torch.norm( ((self.last_foot_velocities - self.foot_velocities) / self.dt) ,dim = -1) -  self.cfg.rewards.max_acc) ).clip(min=0.), dim=1)#* (torch.norm(self.commands[:, :2], dim=1) > 0.1)
+
+    
 
     def get_plane_norm(self):
         # points = quat_apply_yaw(self.base_quat.repeat(1, self.num_height_points), self.height_points) + (self.root_states[:, :3]).unsqueeze(1)
@@ -1613,3 +1643,8 @@ class LeggedRobot(BaseTask):
         smooth_co = target_v.clip(min=1.0)
         # return (torch.sum(torch.abs(self.torques)*torch.abs(self.dof_vel), dim=1)/(self.robot_mass * 9.815 * smooth_co))**2
         return (torch.sum((self.torques*self.dof_vel).clip(min=0.0), dim=1)/(self.robot_mass * 9.815 * smooth_co))**2
+
+    def _reward_action_rate(self):
+        # Penalize changes in actions
+        return torch.sum(torch.square(self.last_actions - self.actions), dim=1)
+

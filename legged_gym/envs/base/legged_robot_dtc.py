@@ -89,7 +89,7 @@ class LeggedRobotDTC(LeggedRobot):
         
         ###########################################################################
         #! added by shaoze
-        self.hip_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.hip_indices, 0:3]
+        self.hip_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.thigh_indices, 0:3]
         
         #! for DTC foothold prediction
         hip_to_base = self.hip_positions - self.base_pos.unsqueeze(1).repeat(1,4,1)
@@ -352,12 +352,16 @@ class LeggedRobotDTC(LeggedRobot):
         # hip_names = ["FL_HipX_joint", "FR_HipX_joint", "HL_HipX_joint", "HR_HipX_joint"]
 
         hip_names = [s for s in body_names if self.cfg.asset.hip_name in s]
+        thigh_names = [s for s in body_names if self.cfg.asset.thigh_name in s]
         
         self.hip_indices = torch.zeros(len(hip_names), dtype=torch.long, device=self.device, requires_grad=False)
-        
+        self.thigh_indices = torch.zeros(len(thigh_names), dtype=torch.long, device=self.device, requires_grad=False)
         
         for i, name in enumerate(hip_names):
             self.hip_indices[i] = body_names.index(name)
+        
+        for i, name in enumerate(thigh_names):
+            self.thigh_indices[i] = body_names.index(name)
         
 
         penalized_contact_names = []
@@ -520,8 +524,11 @@ class LeggedRobotDTC(LeggedRobot):
         return torch.square(base_height - self.cfg.rewards.base_height_target)
 
     def _reward_body_higher_than_feet(self):
+        # stand higher the robot, the better
         foot_to_body = torch.mean(self.foot_positions[:, :, 2], dim=-1) - self.root_states[:, 2]
         return foot_to_body
+    
+
     
     #! DTC tracking optimal footholds reward
     def _reward_tracking_optimal_footholds(self):
