@@ -1095,21 +1095,15 @@ class LeggedRobot(BaseTask):
         self.num_dofs = len(self.dof_names)
         feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
 
-        breakpoint()
         hip_names = ["FL_HipX_joint", "FR_HipX_joint", "HL_HipX_joint", "HR_HipX_joint"]
-        self.hip_indices = torch.zeros(len(hip_names), dtype=torch.long, device=self.device, requires_grad=False)
+        hip_indices = []
         for i, name in enumerate(hip_names):
-            self.hip_indices[i] = self.dof_names.index(name)
-        breakpoint()
-            
-        # hip_names = [s for s in body_names if self.cfg.asset.hip_name in s]
+            hip_indices.append(body_names.index(name))
+        self.hip_indices = torch.tensor(hip_indices, dtype=torch.long, device=self.device, requires_grad=False)
+        
         thigh_names = [s for s in body_names if self.cfg.asset.thigh_name in s]
         
-        # self.hip_indices = torch.zeros(len(hip_names), dtype=torch.long, device=self.device, requires_grad=False)
         self.thigh_indices = torch.zeros(len(thigh_names), dtype=torch.long, device=self.device, requires_grad=False)
-        
-        # for i, name in enumerate(hip_names):
-        #     self.hip_indices[i] = body_names.index(name)
         
         for i, name in enumerate(thigh_names):
             self.thigh_indices[i] = body_names.index(name)
@@ -1528,7 +1522,6 @@ class LeggedRobot(BaseTask):
         return rew_slip
 
     def _reward_hip_pos(self):
-        breakpoint()
         return torch.sum(torch.square(self.dof_pos[:, self.hip_indices]), dim=1)
 
     def _reward_powerchange(self):
