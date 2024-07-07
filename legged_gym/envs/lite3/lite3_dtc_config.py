@@ -23,9 +23,6 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         horizontal_scale = 0.1 # 0.05 # [m] ->0.05
         vertical_scale = 0.005 # [m]
         border_size = 20 # [m]
-        #! changed by wz
-        # border_size = 0
-        
         curriculum = True
         static_friction = 1.0
         dynamic_friction = 1.0
@@ -65,11 +62,6 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             'HL_HipX_joint': 0.1,   # [rad]
             'FR_HipX_joint': -0.1 ,  # [rad]
             'HR_HipX_joint': -0.1,   # [rad]
-
-            # 'FL_HipX_joint': 0.0,   # [rad]
-            # 'HL_HipX_joint': 0.0,   # [rad]
-            # 'FR_HipX_joint': -0.0 ,  # [rad]
-            # 'HR_HipX_joint': -0.0,   # [rad]
 
             'FL_HipY_joint': -1.,     # [rad]
             'HL_HipY_joint': -1.,   # [rad]
@@ -193,7 +185,8 @@ class Lite3DTCCfgPPO( LeggedRobotCfgPPO ):
         experiment_name = 'lite3_dtc'
         max_iterations = 20000
 
-        # #! added by wz
-        # resume =  True
-        # checkpoint = -1 # -1 = last saved model       
+        resume =  True
+        load_run = "legacy_v3"
+        checkpoint = -1 # -1 = last saved model       
+        
 
