@@ -278,10 +278,15 @@ class Vae(nn.Module):
         latent_var = self.latent_var(latent_e)
         # vel_mu = self.vel_mu(latent_e)
         latent_mu = self.latent_mu(latent_e)
-        # height_latent = self.terrain_encoder(height_map)
+
+        #! handle the outliers in latent_var
+        mean = latent_var.mean()
+        std = latent_var.std()
+        thresholds = 3 * std
+        outliers = (latent_var < (mean - thresholds)) | (latent_var > (mean + thresholds))
+        median = latent_var[~outliers].median()
+        latent_var[outliers] = median  
         
-        # self.vae.latent_mu_, self.vae.latent_var_ = self.vae.cenet_forward(observations_history)
-        # self.vel = self.reparameterize(self.latent_mu_[:,:3], self.latent_var_[:,:3])
         z = self.reparameterize(latent_mu[:,3:], latent_var)
         return latent_mu, latent_var, z#, height_latent
         #return self.latent_distribution.sample()
