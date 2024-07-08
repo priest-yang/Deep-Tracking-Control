@@ -282,7 +282,7 @@ class Vae(nn.Module):
         #! handle the outliers in latent_var
         mean = latent_var.mean()
         std = latent_var.std()
-        thresholds = 3 * std
+        thresholds = 2 * std
         outliers = (latent_var < (mean - thresholds)) | (latent_var > (mean + thresholds))
         median = latent_var[~outliers].median()
         latent_var[outliers] = median  

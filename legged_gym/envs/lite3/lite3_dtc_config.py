@@ -159,9 +159,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             
             collision = -1.5
             termination = -0.1
-            # stand_still = -0.2
-            base_height = 0.0 #! remove after robot can stand still
-            body_higher_than_feet = 0.1
+            base_height = -10.
             
             #! added
             action_rate = -0.02
