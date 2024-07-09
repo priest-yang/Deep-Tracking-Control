@@ -221,7 +221,7 @@ class LeggedRobotDTC(LeggedRobot):
         self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 100., dim=1)
         
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
-        self.reset_buf = self.time_out_buf
+        self.reset_buf |= self.time_out_buf
         # self.reset_buf |= (self.projected_gravity[:,2] > -0.2) 
 
         #! stand up
@@ -231,7 +231,7 @@ class LeggedRobotDTC(LeggedRobot):
         #! lite3
         
         self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
-                                       self.measured_heights[:, 10 * 21: (33-10)*21], 
+                                       self.measured_heights[:, 10 * 21: (33-10)*21].clip(min=-0.), 
                                        dim=1)) < 0.1) #! 55-132 changed according to terrain resolution
         
         # self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
