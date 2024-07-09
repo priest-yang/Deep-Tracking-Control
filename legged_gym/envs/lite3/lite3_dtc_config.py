@@ -20,7 +20,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
     class terrain:
         mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
         # mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
-        horizontal_scale = 0.1 # 0.05 # [m] ->0.05
+        horizontal_scale = 0.05 # 0.05 # [m] ->0.05
         vertical_scale = 0.005 # [m]
         border_size = 20 # [m]
         curriculum = True
@@ -141,37 +141,40 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         base_height_target = 0.34
         max_acc = 100.    
         class scales( LeggedRobotCfg.rewards.scales ):
-            torques = -0.000001
-            dof_pos_limits = -10.0
-
-            #! train first
+            
+            tracking_lin_vel = 2.0
+            tracking_ang_vel = 0.5
+            orientation = -.5
+            
+            # #! train first
             # feet_air_time = 0.0
             #! train after
             feet_air_time = 1.0
-            #######################################
+
             torques = -0.000001
             dof_pos_limits = -10.0
-            dof_acc = -2.5e-7 
-            ang_vel_xy = - 0.05 
-            lin_vel_z = - 2.0 
-            smooth = -0.015 
-            feet_air_time = 1.0
+            dof_acc = -2.5e-7 / 10
             
             collision = -1.5
             termination = -0.1
-            base_height = -10.
+            stand_still = -0.2
+            base_height = 0.0
+            body_higher_than_feet = 0.8
             
-            #! added
-            action_rate = -0.02
-            foot_clearance = -0.02#-0.01
+            #added
+            action_rate = -0.01
+            ang_vel_xy = - 0.05 / 5
+            lin_vel_z = - 2.0 / 2
+            foot_clearance = -0.01
             feet_slip = -0.05
-            hip_pos = -0.7
-            powerchange =  -0.01
-            pos_acc = -0.01
+            hip_pos = -0.4 / 10
+            power = -6e-7
+            powerchange =  -0.01 / 2
+            pos_acc = -0.005
             foot_acc = -0.007
+            smooth = -0.015 / 5 
             
-            #! DTC
-            tracking_optimal_footholds = 0.08
+            tracking_optimal_footholds = 1
 
 
 class Lite3DTCCfgPPO( LeggedRobotCfgPPO ):

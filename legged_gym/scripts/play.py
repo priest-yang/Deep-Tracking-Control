@@ -16,10 +16,10 @@ def play(args):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
     env_cfg.env.num_envs = min(env_cfg.env.num_envs, 100)
-    env_cfg.terrain.terrain_length = 6
-    env_cfg.terrain.terrain_width = 6
-    env_cfg.terrain.num_rows = 3
-    env_cfg.terrain.num_cols = 3
+    env_cfg.terrain.terrain_length = 8
+    env_cfg.terrain.terrain_width = 8
+    env_cfg.terrain.num_rows = 2
+    env_cfg.terrain.num_cols = 2
     env_cfg.terrain.curriculum = False
     env_cfg.noise.add_noise = False
     env_cfg.domain_rand.randomize_friction = False
@@ -27,10 +27,11 @@ def play(args):
 
     env_cfg.env.test = True
     env_cfg.env.play_teacher = True
-    env_cfg.env.play_commond = True
+    env_cfg.env.play_commond = False
     
     # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
     env_cfg.terrain.terrain_proportions = [0., 0., .2, .2, .3, .3, .0]
+    env_cfg.terrain.terrain_proportions = [0., 0., .25, .25, .25, .25, .0]
 
     # prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)

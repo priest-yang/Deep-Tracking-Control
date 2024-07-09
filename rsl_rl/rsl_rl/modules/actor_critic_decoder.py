@@ -322,8 +322,6 @@ class ActorCriticDecoder(nn.Module):
         self.add_module(f"actor_body", self.actor_body)
 
 
-
-
         # Value function
         critic_layers = []
         critic_layers.append(nn.Linear(693 + num_obs +3+ 15 +12 - 24 , AC_Args.critic_hidden_dims[0])) #todo :try latent dim = 36
