@@ -130,7 +130,7 @@ class Terrain:
         elif choice < self.proportions[7]:
             pit_terrain(terrain, depth=pit_depth, platform_size=1.)
         else:
-            stones_everywhere_terrain(terrain, stone_size=0.25, stone_distance=0.10, max_height=0.10, platform_size=1., depth=-2)
+            stones_everywhere_terrain(terrain, stone_size=0.25, stone_distance=0.08, max_height=0.08, platform_size=1.3, depth=-2)
         
         return terrain
 
@@ -191,8 +191,11 @@ def stones_everywhere_terrain(terrain, stone_size, stone_distance, max_height, p
         terrain (SubTerrain): update terrain
     """
     # switch parameters to discrete units
-    stone_size = int(stone_size / terrain.horizontal_scale)
-    stone_distance = int(stone_distance / terrain.horizontal_scale)
+    max_stone_size = int(stone_size / terrain.horizontal_scale)
+    # breakpoint()
+    stone_size = np.arange(max_stone_size - 1, max_stone_size+1, step=1)
+    max_stone_distance = int(stone_distance / terrain.horizontal_scale)
+    stone_distance = np.arange(max_stone_distance, max_stone_distance+1, step=1)
     max_height = int(max_height / terrain.vertical_scale)
     platform_size = int(platform_size / terrain.horizontal_scale)
     height_range = np.arange(-max_height-1, max_height, step=1)
@@ -202,30 +205,30 @@ def stones_everywhere_terrain(terrain, stone_size, stone_distance, max_height, p
     terrain.height_field_raw[:, :] = int(depth / terrain.vertical_scale)
     if terrain.length >= terrain.width:
         while start_y < terrain.length:
-            stop_y = min(terrain.length, start_y + stone_size)
-            start_x = np.random.randint(0, stone_size)
+            stop_y = min(terrain.length, start_y + np.random.choice(stone_size))
+            start_x = np.random.randint(0, np.random.choice(stone_size))
             # fill first hole
-            stop_x = max(0, start_x - stone_distance)
+            stop_x = max(0, start_x - np.random.choice(stone_distance))
             terrain.height_field_raw[0: stop_x, start_y: stop_y] = np.random.choice(height_range)
             # fill row
             while start_x < terrain.width:
-                stop_x = min(terrain.width, start_x + stone_size)
+                stop_x = min(terrain.width, start_x + np.random.choice(stone_size))
                 terrain.height_field_raw[start_x: stop_x, start_y: stop_y] = np.random.choice(height_range)
-                start_x += stone_size + stone_distance
-            start_y += stone_size + stone_distance
+                start_x += np.random.choice(stone_size) + np.random.choice(stone_distance)
+            start_y += np.random.choice(stone_size) + np.random.choice(stone_distance)
     elif terrain.width > terrain.length:
         while start_x < terrain.width:
-            stop_x = min(terrain.width, start_x + stone_size)
-            start_y = np.random.randint(0, stone_size)
+            stop_x = min(terrain.width, start_x + np.random.choice(stone_size))
+            start_y = np.random.randint(0, np.random.choice(stone_size))
             # fill first hole
-            stop_y = max(0, start_y - stone_distance)
+            stop_y = max(0, start_y - np.random.choice(stone_distance))
             terrain.height_field_raw[start_x: stop_x, 0: stop_y] = np.random.choice(height_range)
             # fill column
             while start_y < terrain.length:
-                stop_y = min(terrain.length, start_y + stone_size)
+                stop_y = min(terrain.length, start_y + np.random.choice(stone_size))
                 terrain.height_field_raw[start_x: stop_x, start_y: stop_y] = np.random.choice(height_range)
-                start_y += stone_size + stone_distance
-            start_x += stone_size + stone_distance
+                start_y += np.random.choice(stone_size) + np.random.choice(stone_distance)
+            start_x += np.random.choice(stone_size) + np.random.choice(stone_distance)
 
     x1 = (terrain.width - platform_size) // 2
     x2 = (terrain.width + platform_size) // 2

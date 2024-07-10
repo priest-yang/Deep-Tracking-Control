@@ -117,7 +117,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         
         penalize_contacts_on = ["TORSO", "THIGH", "SHANK"] #  ["THIGH", "SHANK"]
         collision_state = ["TORSO","THIGH", "SHANK"]
-        terminate_after_contacts_on = ["TORSO"]
+        terminate_after_contacts_on = []# ["TORSO"]
         self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
         
 
