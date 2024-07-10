@@ -102,7 +102,13 @@ class Terrain:
         step_height = 0.05 + 0.13 * difficulty
 
         discrete_obstacles_height = 0.05 + difficulty * 0.15
-        stone_distance = 0.03 if difficulty==0 else 0.06
+        
+        #! for stone everywhere
+        # stone_distance = 0.03 if difficulty==0 else 0.06
+        stone_distance = 0.06 # 0.03 + 0.06 * difficulty #[0.02-0.08]
+        max_height = 0.02 + 0.03 * difficulty #[0.02-0.04]
+        stone_size =  -0.1 * difficulty + 0.3 #[0.2-0.3]
+        
         gap_size = .8 * difficulty 
         pit_depth = .8 * difficulty
 
@@ -130,7 +136,7 @@ class Terrain:
         elif choice < self.proportions[7]:
             pit_terrain(terrain, depth=pit_depth, platform_size=1.)
         else:
-            stones_everywhere_terrain(terrain, stone_size=0.25, stone_distance=0.08, max_height=0.08, platform_size=1.3, depth=-2)
+            stones_everywhere_terrain(terrain, stone_size=stone_size, stone_distance=stone_distance, max_height=max_height, platform_size=1.3, depth=-2)
         
         return terrain
 
