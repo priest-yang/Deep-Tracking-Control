@@ -127,8 +127,10 @@ class Terrain:
             terrain_utils.stepping_stones_terrain(terrain, stone_size=stepping_stones_size, stone_distance=stone_distance, max_height=0., platform_size=1., depth=-2)
         elif choice < self.proportions[6]:
             gap_terrain(terrain, gap_size=gap_size, platform_size=1.)
-        else:
+        elif choice < self.proportions[7]:
             pit_terrain(terrain, depth=pit_depth, platform_size=1.)
+        else:
+            stones_everywhere_terrain(terrain, stone_size=0.25, stone_distance=0.10, max_height=0.10, platform_size=1., depth=-2)
         
         return terrain
 
@@ -154,7 +156,6 @@ class Terrain:
 def gap_terrain(terrain, gap_size, platform_size=1.):
     gap_size = int(gap_size / terrain.horizontal_scale)
     platform_size = int(platform_size / terrain.horizontal_scale)
-    # print("!!!!!!!!!!!")
     center_x = terrain.length // 2
     center_y = terrain.width // 2
     x1 = (terrain.length - platform_size) // 2
@@ -173,3 +174,62 @@ def pit_terrain(terrain, depth, platform_size=1.):
     y1 = terrain.width // 2 - platform_size
     y2 = terrain.width // 2 + platform_size
     terrain.height_field_raw[x1:x2, y1:y2] = -depth
+    
+    
+def stones_everywhere_terrain(terrain, stone_size, stone_distance, max_height, platform_size=1., depth=-10):
+    """
+    Generate a stepping stones terrain
+
+    Parameters:
+        terrain (terrain): the terrain
+        stone_size (float): horizontal size of the stepping stones [meters]
+        stone_distance (float): distance between stones (i.e size of the holes) [meters]
+        max_height (float): maximum height of the stones (positive and negative) [meters]
+        platform_size (float): size of the flat platform at the center of the terrain [meters]
+        depth (float): depth of the holes (default=-10.) [meters]
+    Returns:
+        terrain (SubTerrain): update terrain
+    """
+    # switch parameters to discrete units
+    stone_size = int(stone_size / terrain.horizontal_scale)
+    stone_distance = int(stone_distance / terrain.horizontal_scale)
+    max_height = int(max_height / terrain.vertical_scale)
+    platform_size = int(platform_size / terrain.horizontal_scale)
+    height_range = np.arange(-max_height-1, max_height, step=1)
+
+    start_x = 0
+    start_y = 0
+    terrain.height_field_raw[:, :] = int(depth / terrain.vertical_scale)
+    if terrain.length >= terrain.width:
+        while start_y < terrain.length:
+            stop_y = min(terrain.length, start_y + stone_size)
+            start_x = np.random.randint(0, stone_size)
+            # fill first hole
+            stop_x = max(0, start_x - stone_distance)
+            terrain.height_field_raw[0: stop_x, start_y: stop_y] = np.random.choice(height_range)
+            # fill row
+            while start_x < terrain.width:
+                stop_x = min(terrain.width, start_x + stone_size)
+                terrain.height_field_raw[start_x: stop_x, start_y: stop_y] = np.random.choice(height_range)
+                start_x += stone_size + stone_distance
+            start_y += stone_size + stone_distance
+    elif terrain.width > terrain.length:
+        while start_x < terrain.width:
+            stop_x = min(terrain.width, start_x + stone_size)
+            start_y = np.random.randint(0, stone_size)
+            # fill first hole
+            stop_y = max(0, start_y - stone_distance)
+            terrain.height_field_raw[start_x: stop_x, 0: stop_y] = np.random.choice(height_range)
+            # fill column
+            while start_y < terrain.length:
+                stop_y = min(terrain.length, start_y + stone_size)
+                terrain.height_field_raw[start_x: stop_x, start_y: stop_y] = np.random.choice(height_range)
+                start_y += stone_size + stone_distance
+            start_x += stone_size + stone_distance
+
+    x1 = (terrain.width - platform_size) // 2
+    x2 = (terrain.width + platform_size) // 2
+    y1 = (terrain.length - platform_size) // 2
+    y2 = (terrain.length + platform_size) // 2
+    terrain.height_field_raw[x1:x2, y1:y2] = 0
+    return terrain
