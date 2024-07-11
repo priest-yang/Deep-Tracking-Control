@@ -518,7 +518,7 @@ class LeggedRobotDTC(LeggedRobot):
 
     def _reward_base_height(self):
         # stand higher the robot, the better
-        foot_to_body = torch.mean(self.foot_positions[:, :, 2], dim=-1) - self.root_states[:, 2]
+        foot_to_body = self.root_states[:, 2] - torch.mean(self.foot_positions[:, :, 2], dim=-1)
         return torch.square(foot_to_body - self.cfg.rewards.base_height_target)
     
     
