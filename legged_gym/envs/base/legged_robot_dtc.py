@@ -521,7 +521,6 @@ class LeggedRobotDTC(LeggedRobot):
         foot_to_body = torch.mean(self.foot_positions[:, :, 2], dim=-1) - self.root_states[:, 2]
         return torch.square(foot_to_body - self.cfg.rewards.base_height_target)
     
-
     
     #! DTC tracking optimal footholds reward
     def _reward_tracking_optimal_footholds(self):
