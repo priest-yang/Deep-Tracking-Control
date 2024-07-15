@@ -138,7 +138,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
         # base_height_target = 0.32
-        base_height_target = 0.34
+        base_height_target = 0.32
         max_acc = 100.    
         class scales( LeggedRobotCfg.rewards.scales ):
             
