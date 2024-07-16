@@ -236,9 +236,9 @@ class LeggedRobotDTC(LeggedRobot):
         
         
         
-        # self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
-        #                                self.foot_positions[:, :, 2], 
-        #                                dim=1)) < 0.1) 
+        # added foot < 0
+        min_foot_z = torch.min(self.foot_positions[:,:,-1], dim=-1)[0]
+        self.reset_buf |= (min_foot_z < 0)
         
 
     def compute_observations(self):
