@@ -198,13 +198,12 @@ def stones_everywhere_terrain(terrain, stone_size, stone_distance, max_height, p
     """
     # switch parameters to discrete units
     max_stone_size = int(stone_size / terrain.horizontal_scale)
-    # breakpoint()
     stone_size = np.arange(max_stone_size - 1, max_stone_size+1, step=1)
     max_stone_distance = int(stone_distance / terrain.horizontal_scale)
     stone_distance = np.arange(max_stone_distance, max_stone_distance+1, step=1)
     max_height = int(max_height / terrain.vertical_scale)
     platform_size = int(platform_size / terrain.horizontal_scale)
-    height_range = np.arange(-max_height-1, max_height, step=1)
+    height_range = np.arange(1, 2 * max_height + 1, step=1)
 
     start_x = 0
     start_y = 0
