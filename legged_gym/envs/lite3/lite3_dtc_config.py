@@ -160,6 +160,8 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             stand_still = -0.2
             base_height = -1.0
             
+            foothold_miss = -0.05 #! for stepping stone only!!!!!!!
+            
             #added
             action_rate = -0.01
             ang_vel_xy = - 0.05 / 5

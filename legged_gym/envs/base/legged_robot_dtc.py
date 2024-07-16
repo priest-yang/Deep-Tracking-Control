@@ -236,9 +236,9 @@ class LeggedRobotDTC(LeggedRobot):
         
         
         
-        # added foot < 0
-        min_foot_z = torch.min(self.foot_positions[:,:,-1], dim=-1)[0]
-        self.reset_buf |= (min_foot_z < 0)
+        # # added foot < 0
+        # min_foot_z = torch.min(self.foot_positions[:,:,-1], dim=-1)[0]
+        # self.reset_buf |= (min_foot_z < 0)
         
 
     def compute_observations(self):
@@ -523,6 +523,10 @@ class LeggedRobotDTC(LeggedRobot):
         foot_to_body = self.root_states[:, 2] - torch.mean(self.foot_positions[:, :, 2], dim=-1)
         return torch.square(foot_to_body - self.cfg.rewards.base_height_target)
     
+    def _reward_foothold_miss(self):
+        # penalize missing footholds
+        min_foot_z = torch.min(self.foot_positions[:,:,-1], dim=-1)[0]
+        return torch.where(min_foot_z < 0, torch.tensor(1., dtype=torch.float32, device=self.device), torch.tensor(0., dtype=torch.float32, device=self.device))
     
     #! DTC tracking optimal footholds reward
     def _reward_tracking_optimal_footholds(self):
