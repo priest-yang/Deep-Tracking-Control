@@ -146,8 +146,8 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             tracking_ang_vel = 0.5
             
             # soft tracking
-            soft_tracking_lin_vel = 1
-            
+            soft_tracking_lin_vel = 2
+            soft_tracking_ang_vel = 0.5
             
             orientation = -.5
             

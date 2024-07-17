@@ -539,33 +539,33 @@ class LeggedRobotDTC(LeggedRobot):
         min_foot_z = torch.min(self.foot_positions[:,:,-1], dim=-1)[0]
         return torch.where(min_foot_z < 0, torch.tensor(1., dtype=torch.float32, device=self.device), torch.tensor(0., dtype=torch.float32, device=self.device))
     
-    #! soft tracking position / head position
-    def _reward_soft_tracking_lin_vel(self, clip=0, lookback=2):
+    #! soft tracking lin / ang vel
+    def _reward_soft_tracking_lin_vel(self, clip=0, lookback=3):
+        '''
+        refer to "Learning Agile Locomotion on Risky Terrains" Position Tracking rwd
+        use formula 1 / (1 + |v - cmd|^2), normed by last **lookback** steps 
+        '''
         dis_norm2 = torch.sum(torch.square((self.cmd_buffer[-lookback:, :, :2] - self.lin_vel_buffer[-lookback, :, :2]) / self.command_ranges["lin_vel_x"][1]), dim=-1)
         if clip != 0:
-            dis_norm2 = torch.where(dis_norm2 <= clip ** 2, 1., 0.)
+            dis_norm2 = torch.where(dis_norm2 <= clip ** 2, 0., 1.)
+        error = 1. / (1. + dis_norm2)
+        normalized_error = torch.mean(error, dim = 0)
+        return normalized_error
+
+    def _reward_soft_tracking_ang_vel(self, clip = 0.2, lookback=4):
+        '''
+        refer to "Learning Agile Locomotion on Risky Terrains" Head Tracking rwd
+        use formula 1 / (1 + |v - cmd|^2), normed by last **lookback** steps 
+        '''
+        dis_norm2 = torch.sum(torch.square((self.cmd_buffer[-lookback:, :, 2] - self.ang_vel_buffer[-lookback, :, :]) / self.command_ranges["ang_vel_yaw"][1]), dim=-1)
+        if clip != 0:
+            dis_norm2 = torch.where(dis_norm2 <= clip ** 2, 0., 1.)
         error = 1. / (1. + dis_norm2)
         normalized_error = torch.mean(error, dim = 0)
         breakpoint()
         return normalized_error
     
-
     
-    
-    
-    
-    
-    
-    def _reward_tracking_lin_vel(self):
-        # Tracking of linear velocity commands (xy axes)
-        # lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
-        
-        lin_vel_error = torch.sum(torch.square((self.commands[:, :2] - self.base_lin_vel[:, :2])/ self.command_ranges["lin_vel_x"][1]), dim=1)
-        #! changed by wz
-        # vel_flag = (self.base_lin_vel[:, :2]-self.commands[:, :2])<=0
-        # vel_flag = (self.base_lin_vel[:, :2]-self.commands[:, :2])*self.commands[:, :2]<=0
-        # lin_vel_error = torch.sum(torch.abs((self.commands[:, :2] - self.base_lin_vel[:, :2])*vel_flag), dim=1)
-        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
     
     
     def _reward_tracking_ang_vel(self):

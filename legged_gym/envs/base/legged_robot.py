@@ -1390,33 +1390,12 @@ class LeggedRobot(BaseTask):
         # lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
         
         lin_vel_error = torch.sum(torch.square((self.commands[:, :2] - self.base_lin_vel[:, :2])/ self.command_ranges["lin_vel_x"][1]), dim=1)
-        #! changed by wz
-        # vel_flag = (self.base_lin_vel[:, :2]-self.commands[:, :2])<=0
-        # vel_flag = (self.base_lin_vel[:, :2]-self.commands[:, :2])*self.commands[:, :2]<=0
-        # lin_vel_error = torch.sum(torch.abs((self.commands[:, :2] - self.base_lin_vel[:, :2])*vel_flag), dim=1)
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
-    
-    #! added by wz
-    def _reward_tracking_lin_vel_2(self):
-        delta_vel = self.base_lin_vel[:, :2] - self.base_ang_vel_last[:, :2]
-        vel_positive_flag = (self.commands[:, :2]-self.base_lin_vel[:, :2]) >= 1.0
-        vel_negative_flag = (self.commands[:, :2]-self.base_lin_vel[:, :2]) <= 1.0
 
-        return torch.sum(torch.abs(delta_vel)*vel_positive_flag+ torch.abs(delta_vel)*vel_negative_flag, dim=1)
-
-    
     def _reward_tracking_ang_vel(self):
         # Tracking of angular velocity commands (yaw) 
         ang_vel_error = torch.square(self.commands[:, 2] - self.base_ang_vel[:, 2])
         return torch.exp(-ang_vel_error/self.cfg.rewards.tracking_sigma)
-
-    #! added by wz
-    def _reward_tracking_ang_vel_2(self):
-        delta_ang_vel = self.base_ang_vel[:, 2] - self.base_ang_vel_last[:, 2]
-        ang_vel_positive_flag = (self.commands[:, 2]-self.base_ang_vel[:, 2])>=0.5
-        ang_vel_negative_flag = (self.commands[:, 2]-self.base_ang_vel[:, 2])<0.5
-
-        return torch.abs(delta_ang_vel)*ang_vel_positive_flag+ torch.abs(delta_ang_vel)*ang_vel_negative_flag
 
 
     def _reward_feet_air_time(self):
