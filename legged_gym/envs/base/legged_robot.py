@@ -141,6 +141,14 @@ class LeggedRobot(BaseTask):
         self.base_lin_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10]) #robot velocity
         self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         
+        # update lin / ang vel / cmd buffer
+        self.lin_vel_buffer[:-1] = self.lin_vel_buffer[1:].clone()
+        self.lin_vel_buffer[-1] = self.base_lin_vel[:, :2]
+        self.ang_vel_buffer[:-1] = self.ang_vel_buffer[1:].clone()
+        self.ang_vel_buffer[-1] = self.base_ang_vel[:, 2].unsqueeze(1) 
+        self.cmd_buffer[:-1] = self.cmd_buffer[1:].clone()
+        self.cmd_buffer[-1] = self.commands
+        
         #to  estimate the pos 
         self.base_pos[:] = self.root_states[:, :3]
         #test
@@ -171,14 +179,6 @@ class LeggedRobot(BaseTask):
         #! added by wz
         self.base_ang_vel_last = self.base_ang_vel.clone()
         self.base_lin_vel_last = self.base_lin_vel.clone()
-        
-        # update lin / ang vel / cmd buffer
-        self.lin_vel_buffer[:-1] = self.lin_vel_buffer[1:].clone()
-        self.lin_vel_buffer[-1] = self.base_lin_vel[:, :2]
-        self.ang_vel_buffer[:-1] = self.ang_vel_buffer[1:].clone()
-        self.lin_vel_buffer[-1] = self.base_ang_vel[:, 2]
-        self.cmd_buffer[:-1] = self.cmd_buffer[1:].clone()
-        self.cmd_buffer[-1] = self.commands
         
         if self.viewer and self.enable_viewer_sync and self.debug_viz:
             self._draw_debug_vis()

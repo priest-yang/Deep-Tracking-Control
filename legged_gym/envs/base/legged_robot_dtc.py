@@ -72,6 +72,14 @@ class LeggedRobotDTC(LeggedRobot):
         self.base_lin_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10]) #robot velocity
         self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         
+        # update lin / ang vel / cmd buffer
+        self.lin_vel_buffer[:-1] = self.lin_vel_buffer[1:].clone()
+        self.lin_vel_buffer[-1] = self.base_lin_vel[:, :2]
+        self.ang_vel_buffer[:-1] = self.ang_vel_buffer[1:].clone()
+        self.ang_vel_buffer[-1] = self.base_ang_vel[:, 2].unsqueeze(1) 
+        self.cmd_buffer[:-1] = self.cmd_buffer[1:].clone()
+        self.cmd_buffer[-1] = self.commands
+        
         #to  estimate the pos 
         self.base_pos[:] = self.root_states[:, :3]
         #test
@@ -191,6 +199,9 @@ class LeggedRobotDTC(LeggedRobot):
                 optimal_indices = optimal_indices.squeeze(1)
                 batch_indices = torch.arange(optimal_indices.size(0)).unsqueeze(-1).expand_as(optimal_indices)
                 self.optimal_footholds_world = self.heights_world[batch_indices, optimal_indices]
+                
+                
+
 
         ###########################################################################
 
@@ -529,13 +540,39 @@ class LeggedRobotDTC(LeggedRobot):
         return torch.where(min_foot_z < 0, torch.tensor(1., dtype=torch.float32, device=self.device), torch.tensor(0., dtype=torch.float32, device=self.device))
     
     #! soft tracking position / head position
-    def _reward_soft_tracking_position(self):
-        dis = self.root_states[:, :2] - self.commands[:, :2]
-        dis = torch.norm(dis, dim = -1)
-        return -dis
+    def _reward_soft_tracking_lin_vel(self, clip=0, lookback=2):
+        dis_norm2 = torch.sum(torch.square((self.cmd_buffer[-lookback:, :, :2] - self.lin_vel_buffer[-lookback, :, :2]) / self.command_ranges["lin_vel_x"][1]), dim=-1)
+        if clip != 0:
+            dis_norm2 = torch.where(dis_norm2 <= clip ** 2, 1., 0.)
+        error = 1. / (1. + dis_norm2)
+        normalized_error = torch.mean(error, dim = 0)
+        breakpoint()
+        return normalized_error
+    
+
     
     
     
+    
+    
+    
+    def _reward_tracking_lin_vel(self):
+        # Tracking of linear velocity commands (xy axes)
+        # lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
+        
+        lin_vel_error = torch.sum(torch.square((self.commands[:, :2] - self.base_lin_vel[:, :2])/ self.command_ranges["lin_vel_x"][1]), dim=1)
+        #! changed by wz
+        # vel_flag = (self.base_lin_vel[:, :2]-self.commands[:, :2])<=0
+        # vel_flag = (self.base_lin_vel[:, :2]-self.commands[:, :2])*self.commands[:, :2]<=0
+        # lin_vel_error = torch.sum(torch.abs((self.commands[:, :2] - self.base_lin_vel[:, :2])*vel_flag), dim=1)
+        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
+    
+    
+    def _reward_tracking_ang_vel(self):
+        # Tracking of angular velocity commands (yaw) 
+        ang_vel_error = torch.square(self.commands[:, 2] - self.base_ang_vel[:, 2])
+        return torch.exp(-ang_vel_error/self.cfg.rewards.tracking_sigma)
+
     #! DTC tracking optimal footholds reward
     def _reward_tracking_optimal_footholds(self):
         dis = self.foot_positions[:, :, :-1] - self.optimal_footholds_world[:, :, :-1]
