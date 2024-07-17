@@ -528,6 +528,14 @@ class LeggedRobotDTC(LeggedRobot):
         min_foot_z = torch.min(self.foot_positions[:,:,-1], dim=-1)[0]
         return torch.where(min_foot_z < 0, torch.tensor(1., dtype=torch.float32, device=self.device), torch.tensor(0., dtype=torch.float32, device=self.device))
     
+    #! soft tracking position / head position
+    def _reward_soft_tracking_position(self):
+        dis = self.root_states[:, :2] - self.commands[:, :2]
+        dis = torch.norm(dis, dim = -1)
+        return -dis
+    
+    
+    
     #! DTC tracking optimal footholds reward
     def _reward_tracking_optimal_footholds(self):
         dis = self.foot_positions[:, :, :-1] - self.optimal_footholds_world[:, :, :-1]
