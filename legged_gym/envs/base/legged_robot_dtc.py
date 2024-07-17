@@ -456,7 +456,7 @@ class LeggedRobotDTC(LeggedRobot):
         self.collision_contact_indices = torch.zeros(len(collision_contact_names), dtype=torch.long, device=self.device, requires_grad=False)
         for i in range(len(collision_contact_names)):
             self.collision_contact_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], collision_contact_names[i])
-
+        
 
     def _draw_debug_vis(self):
         """ Draws visualizations for dubugging (slows down simulation a lot).
@@ -540,29 +540,28 @@ class LeggedRobotDTC(LeggedRobot):
         return torch.where(min_foot_z < 0, torch.tensor(1., dtype=torch.float32, device=self.device), torch.tensor(0., dtype=torch.float32, device=self.device))
     
     #! soft tracking lin / ang vel
-    def _reward_soft_tracking_lin_vel(self, clip=0, lookback=3):
+    def _reward_soft_tracking_lin_vel(self, tolerance = 0., lookback=3):
         '''
         refer to "Learning Agile Locomotion on Risky Terrains" Position Tracking rwd
         use formula 1 / (1 + |v - cmd|^2), normed by last **lookback** steps 
         '''
         dis_norm2 = torch.sum(torch.square((self.cmd_buffer[-lookback:, :, :2] - self.lin_vel_buffer[-lookback, :, :2]) / self.command_ranges["lin_vel_x"][1]), dim=-1)
-        if clip != 0:
-            dis_norm2 = torch.where(dis_norm2 <= clip ** 2, 0., 1.)
+        if tolerance != 0:
+            dis_norm2 = torch.where(dis_norm2 <= tolerance ** 2, 0., 1.)
         error = 1. / (1. + dis_norm2)
         normalized_error = torch.mean(error, dim = 0)
         return normalized_error
 
-    def _reward_soft_tracking_ang_vel(self, clip = 0.2, lookback=4):
+    def _reward_soft_tracking_ang_vel(self, tolerance = 0.15, lookback=4):
         '''
         refer to "Learning Agile Locomotion on Risky Terrains" Head Tracking rwd
         use formula 1 / (1 + |v - cmd|^2), normed by last **lookback** steps 
         '''
-        dis_norm2 = torch.sum(torch.square((self.cmd_buffer[-lookback:, :, 2] - self.ang_vel_buffer[-lookback, :, :]) / self.command_ranges["ang_vel_yaw"][1]), dim=-1)
-        if clip != 0:
-            dis_norm2 = torch.where(dis_norm2 <= clip ** 2, 0., 1.)
+        dis_norm2 = torch.square((self.cmd_buffer[-lookback:, :, 2] - self.ang_vel_buffer[-lookback:, :].squeeze(-1)) / self.command_ranges["ang_vel_yaw"][1])
+        if tolerance != 0:
+            dis_norm2 = torch.where(dis_norm2 <= tolerance ** 2, 0., 1.)
         error = 1. / (1. + dis_norm2)
         normalized_error = torch.mean(error, dim = 0)
-        breakpoint()
         return normalized_error
     
     

@@ -4,7 +4,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
     #! added by wz
     class env( LeggedRobotCfg.env ):
         # num_envs = 4096
-        num_envs = 8
+        num_envs = 32
         num_observations = 45 + 8 # 45 + PMTG:13=58
         num_privileged_obs =  693 + 3 + 693  #212+384
         num_obs_history = (45 + 8)*5
@@ -42,12 +42,11 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         
         terrain_length = 8.
         terrain_width = 8.
-        num_rows= 6 # number of terrain rows (levels)
-        num_cols = 6 # number of terrain cols (types)
+        num_rows= 3 # number of terrain rows (levels)
+        num_cols = 3 # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
-        terrain_proportions = [0., 0., 0, 1, 0, 0, 0]
-        
-        # terrain_proportions = [0, 0, .5,.5, 0]  #stairs up/down
+        terrain_proportions = [0., 0., .2, .2, .2, .4, ]
+        # terrain_proportions = [0., 0., .0, 0, .0, 0, .0, 0, 1]
          
         # trimesh only:
         slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces
@@ -142,8 +141,8 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         max_acc = 100.    
         class scales( LeggedRobotCfg.rewards.scales ):
             
-            tracking_lin_vel = 2.0
-            tracking_ang_vel = 0.5
+            tracking_lin_vel = 0 # 2.0
+            tracking_ang_vel = 0 # 0.5
             
             # soft tracking
             soft_tracking_lin_vel = 2
@@ -163,7 +162,7 @@ class Lite3DTCCfg( LeggedRobotCfg ):
             collision = -1.5
             termination = -0.1
             stand_still = -0.2
-            base_height = -1.0
+            base_height = -4.0
             
             foothold_miss = -0.05 #! for stepping stone only!!!!!!!
             
@@ -192,8 +191,8 @@ class Lite3DTCCfgPPO( LeggedRobotCfgPPO ):
         experiment_name = 'lite3_dtc'
         max_iterations = 20000
 
-        resume =  True
-        load_run = "legacy_v3"
-        checkpoint = -1 # -1 = last saved model       
+        # resume =  True
+        # load_run = "legacy_v3"
+        # checkpoint = -1 # -1 = last saved model       
         
 

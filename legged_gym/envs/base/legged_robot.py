@@ -141,14 +141,6 @@ class LeggedRobot(BaseTask):
         self.base_lin_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10]) #robot velocity
         self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         
-        # update lin / ang vel / cmd buffer
-        self.lin_vel_buffer[:-1] = self.lin_vel_buffer[1:].clone()
-        self.lin_vel_buffer[-1] = self.base_lin_vel[:, :2]
-        self.ang_vel_buffer[:-1] = self.ang_vel_buffer[1:].clone()
-        self.ang_vel_buffer[-1] = self.base_ang_vel[:, 2].unsqueeze(1) 
-        self.cmd_buffer[:-1] = self.cmd_buffer[1:].clone()
-        self.cmd_buffer[-1] = self.commands
-        
         #to  estimate the pos 
         self.base_pos[:] = self.root_states[:, :3]
         #test
@@ -275,9 +267,9 @@ class LeggedRobot(BaseTask):
         self.contact_filt[env_ids] = False
         self.last_contacts[env_ids] = False
         
-        self.lin_vel_buffer[env_ids] = 0.
-        self.ang_vel_buffer[env_ids] = 0.
-        self.cmd_buffer[env_ids] = 0.
+        self.lin_vel_buffer[:, env_ids] = 0.
+        self.ang_vel_buffer[:, env_ids] = 0.
+        self.cmd_buffer[:, env_ids] = 0.
     
     def compute_reward(self):
         """ Compute rewards
@@ -852,6 +844,8 @@ class LeggedRobot(BaseTask):
         self.lin_vel_buffer = torch.zeros(10, self.num_envs, 2, device=self.device, requires_grad=False)
         self.ang_vel_buffer = torch.zeros(10, self.num_envs, 1, device=self.device, requires_grad=False)
         self.cmd_buffer = torch.zeros(10, self.num_envs, len(self.commands[-1]), device=self.device, requires_grad=False)
+        
+        breakpoint()
         # test camera
         # self.sensor_tensor_dict = defaultdict(list)
         # self.forward_depth_resize_transform = T.Resize(
@@ -1336,14 +1330,6 @@ class LeggedRobot(BaseTask):
     # def _reward_orientation(self):
     #     # Penalize non flat base orientation
     #     return torch.sum(torch.square(self.projected_gravity[:, :2]), dim=1)
-
-    def _reward_base_height(self):
-        # Penalize base height away from target
-        # base_height = self.root_states[:, 2]
-        # return torch.square(base_height - self.cfg.rewards.base_height_target)
-
-        base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:, 55:132], dim = 1)
-        return torch.square(base_height - self.cfg.rewards.base_height_target)
 
     
     def _reward_torques(self):
