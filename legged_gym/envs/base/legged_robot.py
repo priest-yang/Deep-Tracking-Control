@@ -172,6 +172,14 @@ class LeggedRobot(BaseTask):
         self.base_ang_vel_last = self.base_ang_vel.clone()
         self.base_lin_vel_last = self.base_lin_vel.clone()
         
+        # update lin / ang vel / cmd buffer
+        self.lin_vel_buffer[:-1] = self.lin_vel_buffer[1:].clone()
+        self.lin_vel_buffer[-1] = self.base_lin_vel[:, :2]
+        self.ang_vel_buffer[:-1] = self.ang_vel_buffer[1:].clone()
+        self.lin_vel_buffer[-1] = self.base_ang_vel[:, 2]
+        self.cmd_buffer[:-1] = self.cmd_buffer[1:].clone()
+        self.cmd_buffer[-1] = self.commands
+        
         if self.viewer and self.enable_viewer_sync and self.debug_viz:
             self._draw_debug_vis()
 
@@ -266,6 +274,10 @@ class LeggedRobot(BaseTask):
         #! added by shaoze
         self.contact_filt[env_ids] = False
         self.last_contacts[env_ids] = False
+        
+        self.lin_vel_buffer[env_ids] = 0.
+        self.ang_vel_buffer[env_ids] = 0.
+        self.cmd_buffer[env_ids] = 0.
     
     def compute_reward(self):
         """ Compute rewards
@@ -836,6 +848,10 @@ class LeggedRobot(BaseTask):
         self.last_contacts = torch.zeros(self.num_envs, len(self.feet_indices), dtype=torch.bool, device=self.device, requires_grad=False)
         self.contact_filt = torch.zeros(self.num_envs, len(self.feet_indices), dtype=torch.bool, device=self.device, requires_grad=False)
         
+        # for soft tracking lin / ang vel rwd
+        self.lin_vel_buffer = torch.zeros(10, self.num_envs, 2, device=self.device, requires_grad=False)
+        self.ang_vel_buffer = torch.zeros(10, self.num_envs, 1, device=self.device, requires_grad=False)
+        self.cmd_buffer = torch.zeros(10, self.num_envs, len(self.commands[-1]), device=self.device, requires_grad=False)
         # test camera
         # self.sensor_tensor_dict = defaultdict(list)
         # self.forward_depth_resize_transform = T.Resize(
@@ -1372,7 +1388,7 @@ class LeggedRobot(BaseTask):
     def _reward_tracking_lin_vel(self):
         # Tracking of linear velocity commands (xy axes)
         # lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
-
+        
         lin_vel_error = torch.sum(torch.square((self.commands[:, :2] - self.base_lin_vel[:, :2])/ self.command_ranges["lin_vel_x"][1]), dim=1)
         #! changed by wz
         # vel_flag = (self.base_lin_vel[:, :2]-self.commands[:, :2])<=0
