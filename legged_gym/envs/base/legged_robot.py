@@ -845,7 +845,6 @@ class LeggedRobot(BaseTask):
         self.ang_vel_buffer = torch.zeros(10, self.num_envs, 1, device=self.device, requires_grad=False)
         self.cmd_buffer = torch.zeros(10, self.num_envs, len(self.commands[-1]), device=self.device, requires_grad=False)
         
-        breakpoint()
         # test camera
         # self.sensor_tensor_dict = defaultdict(list)
         # self.forward_depth_resize_transform = T.Resize(

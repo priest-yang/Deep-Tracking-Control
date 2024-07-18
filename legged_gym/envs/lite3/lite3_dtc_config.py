@@ -39,15 +39,14 @@ class Lite3DTCCfg( LeggedRobotCfg ):
         terrain_kwargs = None # Dict of arguments for selected terrain
         #! train first
         max_init_terrain_level = 5 # starting curriculum state
-        
         terrain_length = 8.
         terrain_width = 8.
-        num_rows= 3 # number of terrain rows (levels)
-        num_cols = 3 # number of terrain cols (types)
+        num_rows= 6 # number of terrain rows (levels) #! must > max_init_terrain_level
+        num_cols = 2 # number of terrain cols (types) #! must > types of terrain specified in 
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain]
         terrain_proportions = [0., 0., .2, .2, .2, .4, ]
         # terrain_proportions = [0., 0., .0, 0, .0, 0, .0, 0, 1]
-         
+        
         # trimesh only:
         slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces
         measure_foot_clearance = True

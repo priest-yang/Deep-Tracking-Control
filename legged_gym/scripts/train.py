@@ -4,6 +4,7 @@ cur_path = os.getcwd()
 sys.path.append(os.path.join(cur_path, "../"))
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 from legged_gym.envs import *
 from legged_gym.utils import task_registry
