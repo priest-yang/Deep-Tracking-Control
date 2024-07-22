@@ -214,12 +214,12 @@ class PPO:
             recons_loss =torch.pow(delta_recon,2).mean(-1).mean()
 
             #! height
-            # height_recon = self.actor_critic.vae.terrain_decoder(height_latent)
+            height_recon = self.actor_critic.vae.terrain_decoder(l_t)
 
             #! terrian loss
 
             #! height
-            # height_loss = F.mse_loss(height_recon, privileged_obs_batch[..., 693+3:])
+            height_loss = F.mse_loss(height_recon, privileged_obs_batch[..., 693+3:])
 
 
             # print('now: ', recons[0])
@@ -243,7 +243,7 @@ class PPO:
             # vae_loss = recons_loss+vel_loss + 4*kld_loss + height_loss
 
             #! changed by wz 2
-            vae_loss = recons_loss+vel_loss+ 4*kld_loss 
+            vae_loss = recons_loss+vel_loss+ 4*kld_loss + height_loss
 
 
 
