@@ -549,7 +549,7 @@ class LeggedRobotDTC(LeggedRobot):
         if tolerance != 0:
             dis_norm2 = torch.where(dis_norm2 <= tolerance ** 2, 0., 1.)
         # error = 1. / (1. + dis_norm2)
-        error = torch.exp(-error / self.cfg.rewards.tracking_sigma)
+        error = torch.exp(-dis_norm2 / self.cfg.rewards.tracking_sigma)
         normalized_error = torch.mean(error, dim = 0)
         return normalized_error
 
@@ -562,7 +562,7 @@ class LeggedRobotDTC(LeggedRobot):
         if tolerance != 0:
             dis_norm2 = torch.where(dis_norm2 <= tolerance ** 2, 0., 1.)
         # error = 1. / (1. + dis_norm2)
-        error = torch.exp(-error / self.cfg.rewards.tracking_sigma)
+        error = torch.exp(-dis_norm2 / self.cfg.rewards.tracking_sigma)
         normalized_error = torch.mean(error, dim = 0)
         return normalized_error
     
