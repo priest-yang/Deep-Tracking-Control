@@ -12,7 +12,7 @@ class AC_Args(PrefixProto, cli=False):
     # policy
     init_noise_std = 1.0
     # actor_hidden_dims = [256, 128, 64]
-    actor_hidden_dims = [512, 256, 128]#paper
+    actor_hidden_dims = [512, 256, 128] #paper
     critic_hidden_dims = [512, 256, 128]
     activation = 'elu'  # can be elu, relu, selu, crelu, lrelu, tanh, sigmoid
 
@@ -25,19 +25,28 @@ class AC_Args(PrefixProto, cli=False):
     privileged_encoder_branch_latent_dims = [12]
     privileged_encoder_branch_hidden_dims = [[64, 32]]
 
-    terrain_encoder_branch_input_dims = [693]# original: 693
-    terrain_encoder_branch_latent_dims = [64]# original: 16
-    terrain_encoder_branch_hidden_dims = [[128, 64]]
+    # terrain_encoder_branch_input_dims = [693]# original: 693
+    # terrain_encoder_branch_latent_dims = [64]# original: 16
+    # terrain_encoder_branch_hidden_dims = [[128, 64]]
 
-    terrain_decoder_branch_input_dims = [64]# original: 693
+    # terrain_decoder_branch_input_dims = [64]# original: 693
+    # terrain_decoder_branch_output_dims = [693]# original: 16
+    # terrain_decoder_branch_hidden_dims = [[64, 128]]
+    
+    terrain_encoder_branch_input_dims = [693]# original: 693
+    terrain_encoder_branch_latent_dims = [512]# original: 16
+    terrain_encoder_branch_hidden_dims = [[512, 512]]
+
+    terrain_decoder_branch_input_dims = [512]# original: 693
     terrain_decoder_branch_output_dims = [693]# original: 16
-    terrain_decoder_branch_hidden_dims = [[64, 128]]
+    terrain_decoder_branch_hidden_dims = [[512, 512]]
+    
     #CENet
     cenet_encoder_branch_input_dims = [53*5]# 45*5
     cenet_encoder_branch_latent_dims = [64]# original: 16
     cenet_encoder_branch_hidden_dims = [[128]]
 
-    cenet_decoder_branch_input_dims = [19+64]
+    cenet_decoder_branch_input_dims = [19+512] #should be changed after change terrain encoder
     cenet_decoder_branch_output_dims = [53]#obs_next
     cenet_decoder_branch_hidden_dims = [[64, 128]]
     
@@ -310,7 +319,9 @@ class ActorCriticDecoder(nn.Module):
 
         # Policy
         actor_layers = []
-        actor_layers.append(nn.Linear(AC_Args.cenet_decoder_branch_input_dims[0] + num_obs, AC_Args.actor_hidden_dims[0]))#19+45
+        actor_layers.append(nn.Linear(num_obs + 16 + 3 + AC_Args.terrain_encoder_branch_latent_dims[0], AC_Args.actor_hidden_dims[0]))#19+45
+        # input dim = num_obs + 16(self.z / self.latent_var) + 3(estimated speed) + terrain latent 
+        
         actor_layers.append(activation)
         for l in range(len(AC_Args.actor_hidden_dims)):
             if l == len(AC_Args.actor_hidden_dims) - 1:
@@ -414,7 +425,7 @@ class ActorCriticDecoder(nn.Module):
 
         #! add the belief encoder   
         l_t = self.vae.terrain_encoder(privileged_obs[:,:693])
-
+        
         mean = self.actor_body(torch.cat((observations,self.z,self.latent_mu[:,:3], l_t), dim=-1))
 
         # mean_before = self.actor_body(torch.cat((observations,self.z,self.latent_mu[:,:3]), dim=-1))

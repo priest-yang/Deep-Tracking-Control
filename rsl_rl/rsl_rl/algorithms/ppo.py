@@ -197,6 +197,7 @@ class PPO:
             latent_mu, latent_var, z = self.actor_critic.vae.cenet_forward(obs_history_batch)
             
             l_t = self.actor_critic.vae.terrain_encoder(privileged_obs_batch[:,:693])
+            
             recons = self.actor_critic.vae.cenet_decoder(torch.cat([z, latent_mu[:,:3],l_t], dim = 1))
             # recons = self.actor_critic.vae.cenet_decoder(latent_mu)
             
@@ -371,7 +372,6 @@ class PPO:
         # teri_loss = lidar_recon_buffer.norm()
         # actor_loss = actions_student_buffer.norm()
         loss = teri_loss + 0.1*actor_loss
-        # print('11111111')
         self.lidar_actor_optimizer.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_([*self.lidar_actor.parameters(), *self.lidar_encoder.parameters(), * self.lidar_vae.parameters()], self.max_grad_norm)
