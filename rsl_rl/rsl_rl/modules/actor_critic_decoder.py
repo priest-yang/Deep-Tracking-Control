@@ -33,11 +33,13 @@ class AC_Args(PrefixProto, cli=False):
     # terrain_decoder_branch_output_dims = [693]# original: 16
     # terrain_decoder_branch_hidden_dims = [[64, 128]]
     
+    terrain_latent = 512
+    
     terrain_encoder_branch_input_dims = [693]# original: 693
-    terrain_encoder_branch_latent_dims = [512]# original: 16
+    terrain_encoder_branch_latent_dims = [terrain_latent]# original: 16
     terrain_encoder_branch_hidden_dims = [[512, 512]]
 
-    terrain_decoder_branch_input_dims = [512]# original: 693
+    terrain_decoder_branch_input_dims = [terrain_latent]# original: 693
     terrain_decoder_branch_output_dims = [693]# original: 16
     terrain_decoder_branch_hidden_dims = [[512, 512]]
     
@@ -46,7 +48,7 @@ class AC_Args(PrefixProto, cli=False):
     cenet_encoder_branch_latent_dims = [64]# original: 16
     cenet_encoder_branch_hidden_dims = [[128]]
 
-    cenet_decoder_branch_input_dims = [19+512] #should be changed after change terrain encoder
+    cenet_decoder_branch_input_dims = [19+terrain_latent] #should be changed after change terrain encoder
     cenet_decoder_branch_output_dims = [53]#obs_next
     cenet_decoder_branch_hidden_dims = [[64, 128]]
     
