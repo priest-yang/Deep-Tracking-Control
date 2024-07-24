@@ -78,9 +78,9 @@ class AC_Args(PrefixProto, cli=False):
     # gb_decoder_hidden_dims = [[128, 64]] 
     # gb_decoder_latent_dims = [64]
 
-    memory_mlp_input_dims = [53*5 + 64]
-    memory_mlp_hidden_dims = [[128, 64]]
-    memory_mlp_latent_dims = [64] 
+    memory_mlp_input_dims = [53*5 + terrain_latent]
+    memory_mlp_hidden_dims = [[256, 128]]
+    memory_mlp_latent_dims = [terrain_latent] 
 
     #LSTM todo
     rnn_type = 'gru'#lstm
