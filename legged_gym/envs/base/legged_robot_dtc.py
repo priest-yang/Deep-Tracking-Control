@@ -240,7 +240,6 @@ class LeggedRobotDTC(LeggedRobot):
         #! X30
         # self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights[:, 55:132], dim=1)) < 0.25)
         #! lite3
-        
         self.reset_buf |= ((torch.mean(self.root_states[:, 2].unsqueeze(1) - 
                                        self.measured_heights[:, 10 * 21: (33-10)*21].clip(min=-0.), 
                                        dim=1)) < 0.1) #! 55-132 changed according to terrain resolution

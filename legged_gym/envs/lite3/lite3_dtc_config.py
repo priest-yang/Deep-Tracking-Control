@@ -187,7 +187,7 @@ class Lite3DTCCfgPPO( LeggedRobotCfgPPO ):
         entropy_coef = 0.003
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'lite3_dtc'
+        experiment_name = 'lite3_dtc_highres'
         max_iterations = 20000
 
         # resume =  True
