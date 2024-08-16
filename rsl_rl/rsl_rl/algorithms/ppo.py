@@ -246,8 +246,6 @@ class PPO:
             #! changed by wz 2
             vae_loss = recons_loss+vel_loss+ 4*kld_loss + height_loss
 
-
-
             self.vae_optimizer.zero_grad()
             # torch.autograd.set_detect_anomaly(True)
             vae_loss.backward()
@@ -330,8 +328,6 @@ class PPO:
                 #    recons_loss+vel_loss + kld_loss
                 #    loss_decoder*0.05
                     
-                    
-
             # Gradient step
             self.optimizer.zero_grad()
             loss.backward()

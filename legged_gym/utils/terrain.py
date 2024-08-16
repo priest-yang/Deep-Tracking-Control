@@ -104,8 +104,8 @@ class Terrain:
         discrete_obstacles_height = 0.05 + difficulty * 0.15
         
         #! for stone everywhere
-        # stone_distance = 0.03 if difficulty==0 else 0.06
-        stone_distance = 0.06 # 0.03 + 0.06 * difficulty #[0.02-0.08]
+        stone_distance = 0.03 if difficulty==0 else 0.06
+        # stone_distance = 0.02 + 0.06 * difficulty #[0.02-0.08]
         max_height = 0.02 + 0.03 * difficulty #[0.02-0.04]
         stone_size =  -0.1 * difficulty + 0.3 #[0.2-0.3]
         

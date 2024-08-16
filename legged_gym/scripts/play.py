@@ -31,8 +31,9 @@ def play(args):
     
     # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap_terrain, pit_terrain, stone_everywhere]
     env_cfg.terrain.terrain_proportions = [0., 0., .2, .2, .3, .3, .0]
-    env_cfg.terrain.terrain_proportions = [0., 0., .25, .25, .25, .25, .0]
-    # env_cfg.terrain.terrain_proportions = [0., 0., .0, 0, 0, .5, .0, 0, .5]
+    
+    env_cfg.terrain.terrain_proportions = [.2, .2, .2, .2, .2, 0., .0] #[0., 0., .25, .25, .25, .25, .0]
+    env_cfg.terrain.terrain_proportions = [0., 0., .0, 0, 0, .2, .0, 0, .8]
 
     # prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
