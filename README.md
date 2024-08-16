@@ -14,12 +14,14 @@ You can find the modifications in [`legged_robot_dtc.py`](legged_gym/envs/base/l
 In this project, we adapt a method similar to [TAMOLS](https://arxiv.org/abs/2206.14049) and [Mini-Cheetah](https://arxiv.org/abs/1909.06586). 
 
 An estimated foothold will firstly be calculated by the formula:
+
 $$
-\begin{equation}
 r_i^{cmd} = p_{shoulder, i} + p_{symmetry} + p_{centrifugal}
-\end{equation}
 $$
+
+
 where
+
 $$
 p_{shoulder,i} = p_k + R_z(\Psi_k)l_i
 $$
