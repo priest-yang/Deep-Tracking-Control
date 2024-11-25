@@ -66,4 +66,6 @@ pip install -e .
 ```
 
 
-### 
+## Reference 
+
+1. [DTC: Deep Tracking Control](https://arxiv.org/abs/2309.15462)
